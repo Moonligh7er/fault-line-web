@@ -1,0 +1,25 @@
+{
+  "extends": ["next/core-web-vitals", "next/typescript", "plugin:security/recommended-legacy"],
+  "plugins": ["security"],
+  "rules": {
+    "no-eval": "error",
+    "no-implied-eval": "error",
+    "no-new-func": "error",
+    "no-script-url": "error",
+    "react/no-danger": "error",
+    "react/no-danger-with-children": "error",
+    "@typescript-eslint/no-explicit-any": "error",
+    "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
+    "security/detect-object-injection": "off",
+    "security/detect-non-literal-fs-filename": "error",
+    "security/detect-non-literal-regexp": "warn",
+    "security/detect-unsafe-regex": "off",
+    "security/detect-buffer-noassert": "error",
+    "security/detect-child-process": "error",
+    "security/detect-disable-mustache-escape": "error",
+    "security/detect-eval-with-expression": "error",
+    "security/detect-no-csrf-before-method-override": "error",
+    "security/detect-possible-timing-attacks": "warn",
+    "security/detect-pseudoRandomBytes": "error"
+  }
+}

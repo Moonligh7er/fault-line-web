@@ -1,0 +1,38 @@
+{
+  "name": "fault-line-web",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Fault Line web app — community infrastructure accountability",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "check": "npm run typecheck && npm run lint",
+    "audit": "npm audit --audit-level=moderate"
+  },
+  "dependencies": {
+    "@supabase/ssr": "^0.5.2",
+    "@supabase/supabase-js": "^2.47.10",
+    "@upstash/ratelimit": "^2.0.5",
+    "@upstash/redis": "^1.34.3",
+    "leaflet": "^1.9.4",
+    "next": "^15.1.3",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-leaflet": "^5.0.0-rc.2",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@sentry/nextjs": "^8.47.0",
+    "@types/leaflet": "^1.9.15",
+    "@types/node": "^22.10.2",
+    "@types/react": "^19.0.2",
+    "@types/react-dom": "^19.0.2",
+    "eslint": "^9.17.0",
+    "eslint-config-next": "^15.1.3",
+    "eslint-plugin-security": "^3.0.1",
+    "typescript": "^5.7.2"
+  }
+}
