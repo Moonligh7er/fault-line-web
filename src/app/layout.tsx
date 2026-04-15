@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { headers } from 'next/headers';
 import Script from 'next/script';
 import Link from 'next/link';
+import { createSupabaseServerClient } from '@/lib/supabase/server';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -42,6 +43,12 @@ export default async function RootLayout({
   const nonce = (await headers()).get('x-nonce') ?? undefined;
   const gaId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
 
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const isSignedIn = Boolean(user);
+
   return (
     <html lang="en">
       <head>
@@ -50,6 +57,14 @@ export default async function RootLayout({
           href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
           integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
           crossOrigin=""
+        />
+        <link
+          rel="stylesheet"
+          href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"
+        />
+        <link
+          rel="stylesheet"
+          href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"
         />
       </head>
       <body>
@@ -63,7 +78,34 @@ export default async function RootLayout({
             <Link href="/submit">Report</Link>
             <Link href="/dashboard">Dashboard</Link>
             <Link href="/authority">Authorities</Link>
-            <Link href="/profile">Profile</Link>
+            {isSignedIn ? (
+              <>
+                <Link href="/profile">Profile</Link>
+                <form
+                  action="/auth/signout"
+                  method="post"
+                  style={{ display: 'inline' }}
+                >
+                  <button
+                    type="submit"
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      color: 'var(--text-secondary)',
+                      cursor: 'pointer',
+                      font: 'inherit',
+                      fontWeight: 500,
+                      fontSize: 14,
+                      padding: 0,
+                    }}
+                  >
+                    Sign out
+                  </button>
+                </form>
+              </>
+            ) : (
+              <Link href="/login">Sign in</Link>
+            )}
           </nav>
         </header>
         <main>{children}</main>

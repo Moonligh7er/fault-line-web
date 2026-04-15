@@ -1,8 +1,8 @@
-import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { getCategoryInfo } from '@/lib/categories';
 import type { ReportRow } from '@/lib/types';
+import RecentReportsLive from './recent-reports-live';
 
 export const metadata = { title: 'Dashboard' };
 
@@ -74,25 +74,20 @@ export default async function DashboardPage() {
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
         <section className="card">
-          <h2 style={{ fontSize: 18, marginBottom: 12 }}>Recent reports</h2>
-          <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {(recent ?? []).slice(0, 10).map((r) => {
-              const info = getCategoryInfo(r.category);
-              return (
-                <li key={r.id}>
-                  <Link
-                    href={`/report/${r.id}`}
-                    style={{ color: 'var(--text)', fontSize: 14, textDecoration: 'none' }}
-                  >
-                    <strong>{info?.label ?? r.category}</strong>{' '}
-                    <span style={{ color: 'var(--text-muted)' }}>
-                      — {r.city ?? 'Unknown'} · {r.status}
-                    </span>
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
+          <h2 style={{ fontSize: 18, marginBottom: 12 }}>
+            Recent reports{' '}
+            <span
+              style={{
+                fontSize: 11,
+                color: 'var(--success)',
+                fontWeight: 500,
+                marginLeft: 8,
+              }}
+            >
+              ● live
+            </span>
+          </h2>
+          <RecentReportsLive initial={recent ?? []} />
         </section>
 
         <section className="card">

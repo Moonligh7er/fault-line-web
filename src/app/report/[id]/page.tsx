@@ -7,6 +7,7 @@ import { env } from '@/lib/env';
 import type { ReportRow } from '@/lib/types';
 import VoteButtons from './vote-buttons';
 import ShareButton from '@/components/ShareButton';
+import PhotoLightbox from '@/components/PhotoLightbox';
 
 const idSchema = z.string().uuid();
 
@@ -121,28 +122,12 @@ export default async function ReportDetailPage({ params }: PageProps) {
       {report.media && report.media.length > 0 && (
         <section className="card" style={{ marginBottom: 16 }}>
           <h2 style={{ fontSize: 18, marginBottom: 12 }}>Photos</h2>
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-              gap: 12,
-            }}
-          >
-            {report.media.map((m, idx) => (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                key={idx}
-                src={m.url}
-                alt={`Report photo ${idx + 1}`}
-                style={{
-                  width: '100%',
-                  borderRadius: 'var(--radius)',
-                  border: '1px solid var(--border)',
-                }}
-                loading="lazy"
-              />
-            ))}
-          </div>
+          <PhotoLightbox
+            photos={report.media.map((m, idx) => ({
+              url: m.url,
+              alt: `Report photo ${idx + 1}`,
+            }))}
+          />
         </section>
       )}
 
