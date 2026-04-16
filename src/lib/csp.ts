@@ -39,6 +39,8 @@ export function buildCsp({ nonce, isDev }: BuildCspOptions): string {
     'wss://*.supabase.co',
     'https://www.google-analytics.com',
     'https://analytics.google.com',
+    // Formspree — feedback/feature-request/bug-report submissions
+    'https://formspree.io',
   ];
 
   if (isDev) {

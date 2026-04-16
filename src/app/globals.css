@@ -86,6 +86,42 @@ a:focus-visible {
   font-size: 14px;
 }
 
+/* Active Development feedback pill — used in main nav and as a section header
+   above the feedback entry point in the mobile/web profile menu. */
+.active-dev-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0, 200, 83, 0.08);
+  border: 1px solid rgba(0, 200, 83, 0.25);
+  color: #00c853 !important;
+  padding: 5px 14px 5px 10px;
+  border-radius: 100px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: background 0.2s;
+}
+.active-dev-pill:hover {
+  background: rgba(0, 200, 83, 0.16);
+  text-decoration: none;
+  color: #00c853 !important;
+}
+.active-dev-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #00c853;
+  box-shadow: 0 0 6px #00c853;
+  display: inline-block;
+  animation: active-dev-pulse 2s ease-in-out infinite;
+}
+@keyframes active-dev-pulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 6px #00c853; }
+  50% { opacity: 0.55; box-shadow: 0 0 12px #00c853; }
+}
+
 main {
   min-height: calc(100vh - 140px);
   padding: 24px;

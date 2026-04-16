@@ -14,9 +14,9 @@ export const metadata: Metadata = {
   description:
     'Community infrastructure accountability. Report potholes, broken streetlights, and infrastructure issues. Free and community-verified.',
   applicationName: 'Fault Line',
-  authors: [{ name: 'Fault Line' }],
-  creator: 'Fault Line',
-  publisher: 'Fault Line',
+  authors: [{ name: 'Michael Wylde', url: 'https://moonligh7er.github.io/FaultLine' }],
+  creator: 'Moonlit Social Labs',
+  publisher: 'Moonlit Social Labs',
   formatDetection: { email: false, address: false, telephone: false },
   robots: { index: true, follow: true },
   openGraph: {
@@ -78,6 +78,10 @@ export default async function RootLayout({
             <Link href="/submit">Report</Link>
             <Link href="/dashboard">Dashboard</Link>
             <Link href="/authority">Authorities</Link>
+            <Link href="/feedback" className="active-dev-pill" aria-label="Feedback (Active Development)">
+              <span className="active-dev-dot" aria-hidden="true" />
+              Active Development
+            </Link>
             {isSignedIn ? (
               <>
                 <Link href="/profile">Profile</Link>
@@ -114,8 +118,11 @@ export default async function RootLayout({
             <Link href="/about">About</Link>
             <Link href="/privacy">Privacy</Link>
             <Link href="/terms">Terms</Link>
+            <Link href="/feedback">Feedback</Link>
           </nav>
-          <p>&copy; {new Date().getFullYear()} Fault Line</p>
+          <p>
+            &copy; {new Date().getFullYear()} Moonlit Social Labs · Fault Line is a product of Moonlit Social Labs
+          </p>
         </footer>
         {gaId && (
           <>

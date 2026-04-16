@@ -55,4 +55,8 @@ describe('buildCsp', () => {
   it('allows Supabase websocket', () => {
     expect(buildCsp({ nonce, isDev: false })).toContain('wss://*.supabase.co');
   });
+
+  it('allows Formspree for feedback submissions', () => {
+    expect(buildCsp({ nonce, isDev: false })).toContain('https://formspree.io');
+  });
 });
