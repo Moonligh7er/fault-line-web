@@ -70,7 +70,7 @@ export default async function RootLayout({
       <body>
         <header className="site-header">
           <Link href="/" className="brand">
-            Fault<span>Line</span>
+            Fault<span>&nbsp;Line</span>
           </Link>
           <nav aria-label="Main">
             <Link href="/map">Map</Link>
