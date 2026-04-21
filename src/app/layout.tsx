@@ -48,6 +48,8 @@ export default async function RootLayout({
     data: { user },
   } = await supabase.auth.getUser();
   const isSignedIn = Boolean(user);
+  const ADMIN_EMAILS = new Set(['moonligh7er@gmail.com', 'moonlit-social-labs@proton.me']);
+  const isAdmin = Boolean(user?.email && ADMIN_EMAILS.has(user.email.toLowerCase()));
 
   return (
     <html lang="en">
@@ -82,6 +84,7 @@ export default async function RootLayout({
               <span className="active-dev-dot" aria-hidden="true" />
               Active Development
             </Link>
+            {isAdmin && <Link href="/admin/queue">Queue</Link>}
             {isSignedIn ? (
               <>
                 <Link href="/profile">Profile</Link>
