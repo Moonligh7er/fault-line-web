@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 // Resend webhook handler.
 //
@@ -121,7 +121,7 @@ export async function POST(req: NextRequest) {
 }
 
 async function updateAuthorityHealth(
-  supabase: ReturnType<typeof createClient>,
+  supabase: SupabaseClient,
   authorityId: string,
   bounceType: string,
 ) {
@@ -181,7 +181,10 @@ async function verifySignature(req: NextRequest, rawBody: string): Promise<boole
   const expected = btoa(String.fromCharCode(...new Uint8Array(sigBytes)));
 
   // The header contains one or more "v1,<sig>" pairs separated by spaces.
-  const sigs = svixSignature.split(' ').map((s) => s.split(',')[1]);
+  const sigs = svixSignature
+    .split(' ')
+    .map((s) => s.split(',')[1])
+    .filter((s): s is string => typeof s === 'string' && s.length > 0);
   return sigs.some((sig) => timingSafeEqual(sig, expected));
 }
 
