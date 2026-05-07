@@ -2,11 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
-
-const ADMIN_EMAILS = new Set<string>([
-  'moonligh7er@gmail.com',
-  'moonlit-social-labs@proton.me',
-]);
+import { isAdminEmail } from '@/lib/admin';
 
 export async function markSubmitted(
   logId: string,
@@ -17,7 +13,7 @@ export async function markSubmitted(
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user || !user.email || !ADMIN_EMAILS.has(user.email.toLowerCase())) {
+  if (!user || !isAdminEmail(user.email)) {
     return { ok: false, error: 'Unauthorized' };
   }
 

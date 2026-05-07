@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { isAdminEmail } from '@/lib/admin';
 import QueueList, { type QueueRow } from './queue-list';
 
 export const metadata = {
@@ -8,13 +9,6 @@ export const metadata = {
   robots: { index: false, follow: false },
 };
 
-// Admin gate. Add more emails here as the team grows, or migrate to
-// a `profiles.role` column when we have one.
-const ADMIN_EMAILS = new Set<string>([
-  'moonligh7er@gmail.com',
-  'moonlit-social-labs@proton.me',
-]);
-
 export default async function EscalationQueuePage() {
   const supabase = await createSupabaseServerClient();
   const {
@@ -22,9 +16,7 @@ export default async function EscalationQueuePage() {
   } = await supabase.auth.getUser();
 
   if (!user) redirect('/login?next=/admin/queue');
-  if (!user.email || !ADMIN_EMAILS.has(user.email.toLowerCase())) {
-    redirect('/');
-  }
+  if (!isAdminEmail(user.email)) redirect('/');
 
   // Pull escalation_log rows that need manual handling, newest first.
   // Joins in the cluster + authority so we can render a complete card per row.

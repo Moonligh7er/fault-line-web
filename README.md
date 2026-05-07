@@ -1,5 +1,20 @@
 # Fault Line — Web App
 
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](LICENSE)
+[![Live](https://img.shields.io/badge/live-app.fault--line.dev-F4B832)](https://app.fault-line.dev)
+
+The web client for **Fault Line**, a community infrastructure-accountability platform. Residents submit pothole / streetlight / drainage / signage reports with one tap; the system aggregates, verifies, and auto-escalates them to the responsible municipal authority with documentation that creates legal notice.
+
+🌐 **Live:** [app.fault-line.dev](https://app.fault-line.dev) · [marketing site](https://fault-line.dev) · [📱 mobile app + backend](https://github.com/Moonligh7er/FaultLine)
+
+## Why this exists
+
+Most cities run a 311 system designed in the 1990s. Reports vanish, status updates don't happen, and individual complaints are easy to ignore. Every state has a **notice-of-defect** statute that creates municipal liability for unfixed reported hazards — but almost nobody triggers it because the documentation is too clunky. Fault Line is the documentation infrastructure: a one-tap photo becomes a community-verified, GPS-stamped, legally significant record that escalates automatically to the right authority.
+
+This repo is the Next.js web client. The Expo/React Native mobile app + Supabase backend live in the [Moonligh7er/FaultLine](https://github.com/Moonligh7er/FaultLine) sibling repo. Both share the same database.
+
+---
+
 Next.js 15 (App Router, React 19) web app for Fault Line. Shares the same Supabase backend as the mobile app.
 
 ## Security
@@ -113,5 +128,15 @@ src/
 
 ## Related
 
-- **Mobile app:** `../Fault-Line/` — Expo/React Native, same Supabase backend
-- **Marketing site:** `fault-line.dev/` — static HTML, separate deployment
+- **Mobile app + Supabase backend:** [Moonligh7er/FaultLine](https://github.com/Moonligh7er/FaultLine) — Expo/React Native + edge functions, same database
+- **Marketing site:** [fault-line.dev](https://fault-line.dev) — static HTML, served via GitHub Pages
+
+## Contributing
+
+PRs and issues welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for setup and PR guidance, and [SECURITY.md](SECURITY.md) for the responsible-disclosure process if you find a vulnerability.
+
+## License
+
+[AGPL-3.0](LICENSE). The whole project is about civic transparency, so the license is too — anyone running modified versions as a service must offer the modified source to its users.
+
+— Built by [Moonlit Social Labs](https://moonlitsociallabs.com).
