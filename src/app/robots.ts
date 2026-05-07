@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next';
 
 export default function robots(): MetadataRoute.Robots {
-  const origin = process.env.NEXT_PUBLIC_APP_ORIGIN ?? 'https://app.faultline.app';
+  const origin = process.env.NEXT_PUBLIC_APP_ORIGIN ?? 'https://app.fault-line.dev';
   return {
     rules: [
       {

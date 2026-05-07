@@ -114,4 +114,4 @@ src/
 ## Related
 
 - **Mobile app:** `../Fault-Line/` — Expo/React Native, same Supabase backend
-- **Marketing site:** `moonligh7er.github.io/FaultLine/` — static HTML, separate deployment
+- **Marketing site:** `fault-line.dev/` — static HTML, separate deployment

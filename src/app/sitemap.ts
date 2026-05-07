@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next';
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const origin = process.env.NEXT_PUBLIC_APP_ORIGIN ?? 'https://app.faultline.app';
+  const origin = process.env.NEXT_PUBLIC_APP_ORIGIN ?? 'https://app.fault-line.dev';
   const now = new Date();
   return [
     { url: origin, lastModified: now, priority: 1.0 },

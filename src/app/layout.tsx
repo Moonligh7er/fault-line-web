@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   description:
     'Community infrastructure accountability. Report potholes, broken streetlights, and infrastructure issues. Free and community-verified.',
   applicationName: 'Fault Line',
-  authors: [{ name: 'Michael Wylde', url: 'https://moonligh7er.github.io/FaultLine' }],
+  authors: [{ name: 'Michael Wylde', url: 'https://fault-line.dev' }],
   creator: 'Moonlit Social Labs',
   publisher: 'Moonlit Social Labs',
   formatDetection: { email: false, address: false, telephone: false },
