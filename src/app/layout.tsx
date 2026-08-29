@@ -122,6 +122,11 @@ export default async function RootLayout({
             <Link href="/privacy">Privacy</Link>
             <Link href="/terms">Terms</Link>
             <Link href="/feedback">Feedback</Link>
+            <a href="https://fault-line.dev" rel="noopener">Marketing site</a>
+            <a href="https://fault-line.dev/methodology.html" rel="noopener">Grading methodology</a>
+            <a href="https://fault-line.dev/cities.html" rel="noopener">For cities</a>
+            <a href="https://fault-line.dev/faq.html" rel="noopener">FAQ</a>
+            <a href="https://fault-line.dev/changelog.html" rel="noopener">Changelog</a>
           </nav>
           <p>
             &copy; {new Date().getFullYear()} Moonlit Social Labs · Fault Line is a product of Moonlit Social Labs
