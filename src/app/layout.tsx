@@ -129,7 +129,7 @@ export default async function RootLayout({
             <a href="https://fault-line.dev/changelog.html" rel="noopener">Changelog</a>
           </nav>
           <p>
-            &copy; {new Date().getFullYear()} Moonlit Social Labs · Fault Line is a product of Moonlit Social Labs
+            &copy; 2025&ndash;{new Date().getFullYear()} Moonlit Social Labs · Fault Line is a product of Moonlit Social Labs
           </p>
         </footer>
         {gaId && (
