@@ -52,7 +52,7 @@ export function buildCsp({ nonce, isDev }: BuildCspOptions): string {
     `script-src ${scriptSrc.join(' ')}`,
     `script-src-elem ${scriptSrc.join(' ')}`,
     `style-src 'self' 'unsafe-inline' https://unpkg.com`, // Leaflet CSS from CDN
-    `img-src 'self' data: blob: https://*.supabase.co https://*.tile.openstreetmap.org https://unpkg.com`,
+    `img-src 'self' data: blob: https://*.supabase.co https://tile.openstreetmap.org https://unpkg.com`,
     `font-src 'self' data:`,
     `connect-src ${connectSrc.join(' ')}`,
     `media-src 'self' blob: https://*.supabase.co`,

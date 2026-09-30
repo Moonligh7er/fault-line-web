@@ -41,7 +41,10 @@ export default function LeafletMap({ reports, center, radiusKm }: Props) {
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+          // OSM's tile policy rejects requests with no Referer, and the site-wide
+          // Referrer-Policy is no-referrer. Send just the origin on tile requests.
+          referrerPolicy="strict-origin-when-cross-origin"
         />
         <Circle
           center={center}
