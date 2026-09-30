@@ -428,3 +428,22 @@ label {
 .mono {
   font-family: var(--ff-mono);
 }
+
+/* Home hero: "should ~~never~~ fix this faster". The red bar is a
+   pseudo-element, which inline styles can't express. */
+.hero-strike {
+  position: relative;
+  display: inline-block;
+  color: var(--steel);
+  font-style: normal;
+}
+.hero-strike::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 52%;
+  height: 10px;
+  background: var(--signal-red);
+  transform: rotate(-2deg);
+}

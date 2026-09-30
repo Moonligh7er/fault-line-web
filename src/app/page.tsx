@@ -32,7 +32,7 @@ export default function HomePage() {
       >
         Your tax dollars should
         <br />
-        <span style={{ color: 'var(--steel)', position: 'relative' }}>never</span>{' '}
+        <span className="hero-strike">never</span>{' '}
         <em style={{ color: 'var(--amber)', fontStyle: 'italic', fontWeight: 900 }}>fix this faster</em>.
       </h1>
       <p
