@@ -29,6 +29,7 @@
 
   /* Signals */
   --signal-green: #46C37A;
+  --signal-purple: #A78BFA;
   --signal-red: #E8463E;
 
   /* Foreground */
@@ -205,14 +206,14 @@ em {
   border-bottom-color: var(--amber);
 }
 
-/* Active Development pill (used in Next.js nav) */
+/* Beta pill (used in Next.js nav) */
 .active-dev-pill {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: rgba(70, 195, 122, 0.08);
-  border: 1px solid rgba(70, 195, 122, 0.3);
-  color: var(--signal-green) !important;
+  background: rgba(167, 139, 250, 0.08);
+  border: 1px solid rgba(167, 139, 250, 0.3);
+  color: var(--signal-purple) !important;
   padding: 5px 14px 5px 10px;
   border-radius: 100px;
   font-family: var(--ff-ui);
@@ -223,21 +224,21 @@ em {
   transition: background 0.2s;
 }
 .active-dev-pill:hover {
-  background: rgba(70, 195, 122, 0.16);
-  color: var(--signal-green) !important;
+  background: rgba(167, 139, 250, 0.16);
+  color: var(--signal-purple) !important;
 }
 .active-dev-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--signal-green);
-  box-shadow: 0 0 6px var(--signal-green);
+  background: var(--signal-purple);
+  box-shadow: 0 0 6px var(--signal-purple);
   display: inline-block;
   animation: active-dev-pulse 2s ease-in-out infinite;
 }
 @keyframes active-dev-pulse {
-  0%, 100% { opacity: 1; box-shadow: 0 0 6px var(--signal-green); }
-  50% { opacity: 0.55; box-shadow: 0 0 12px var(--signal-green); }
+  0%, 100% { opacity: 1; box-shadow: 0 0 6px var(--signal-purple); }
+  50% { opacity: 0.55; box-shadow: 0 0 12px var(--signal-purple); }
 }
 
 /* ===== MAIN ===== */
@@ -429,21 +430,58 @@ label {
   font-family: var(--ff-mono);
 }
 
-/* Home hero: "should ~~never~~ fix this faster". The red bar is a
-   pseudo-element, which inline styles can't express. */
-.hero-strike {
+/* Home hero punchline — see components/HeroRotator.tsx.
+   "fix this hopefully → eventually → ~~never~~ → faster." */
+.hero-word {
   position: relative;
   display: inline-block;
-  color: var(--steel);
+  font-weight: 900;
+  animation: hero-word-in 0.28s ease-out both;
+}
+.hero-word--interim {
+  color: var(--steel-light);
+  font-style: italic;
+}
+.hero-word--final {
+  color: var(--amber);
+  font-style: italic;
+}
+.hero-word--strike {
   font-style: normal;
 }
-.hero-strike::after {
+/* The red bar draws across "never" after it lands */
+.hero-word--strike::after {
   content: '';
   position: absolute;
-  left: 0;
-  right: 0;
+  left: -2%;
+  right: -2%;
   top: 52%;
-  height: 10px;
+  height: 0.09em;
+  min-height: 6px;
   background: var(--signal-red);
-  transform: rotate(-2deg);
+  transform-origin: left center;
+  animation: hero-strike-draw 0.35s ease-in 0.45s both;
+}
+/* Server render: hold "faster" hidden briefly so it doesn't flash before
+   the rotation starts; it still appears if JS never runs. */
+.hero-word--ssr {
+  animation: hero-word-reveal 0s linear 1.5s both;
+}
+@keyframes hero-word-in {
+  from { opacity: 0; transform: translateY(0.18em); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes hero-strike-draw {
+  from { transform: rotate(-2deg) scaleX(0); }
+  to { transform: rotate(-2deg) scaleX(1); }
+}
+@keyframes hero-word-reveal {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-word,
+  .hero-word--strike::after {
+    animation: none;
+  }
 }

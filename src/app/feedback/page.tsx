@@ -4,7 +4,7 @@ import FeedbackForm from './feedback-form';
 export const metadata: Metadata = {
   title: 'Feedback & Feature Requests',
   description:
-    'Active development. Send feedback, request features, or report bugs. Every submission is read.',
+    'Beta. Send feedback, request features, or report bugs. Every submission is read.',
   robots: { index: true, follow: true },
 };
 
@@ -17,9 +17,9 @@ export default function FeedbackPage() {
             display: 'inline-flex',
             alignItems: 'center',
             gap: 8,
-            background: 'rgba(0,200,83,0.08)',
-            border: '1px solid rgba(0,200,83,0.25)',
-            color: '#00c853',
+            background: 'rgba(167,139,250,0.08)',
+            border: '1px solid rgba(167,139,250,0.3)',
+            color: 'var(--signal-purple)',
             padding: '6px 16px 6px 12px',
             borderRadius: 100,
             fontSize: 12,
@@ -34,11 +34,11 @@ export default function FeedbackPage() {
               width: 8,
               height: 8,
               borderRadius: '50%',
-              background: '#00c853',
-              boxShadow: '0 0 6px #00c853',
+              background: 'var(--signal-purple)',
+              boxShadow: '0 0 6px var(--signal-purple)',
             }}
           />
-          Active Development
+          Beta
         </span>
         <h1 style={{ fontSize: 'clamp(28px, 5vw, 40px)', fontWeight: 900, marginBottom: 8 }}>
           Help Shape Fault Line

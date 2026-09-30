@@ -80,9 +80,9 @@ export default async function RootLayout({
             <Link href="/submit">Report</Link>
             <Link href="/dashboard">Dashboard</Link>
             <Link href="/authority">Authorities</Link>
-            <Link href="/feedback" className="active-dev-pill" aria-label="Feedback (Active Development)">
+            <Link href="/feedback" className="active-dev-pill" aria-label="Feedback (Beta)">
               <span className="active-dev-dot" aria-hidden="true" />
-              Active Development
+              Beta
             </Link>
             {isAdmin && <Link href="/admin/queue">Queue</Link>}
             {isSignedIn ? (

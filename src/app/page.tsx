@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import HeroRotator from '@/components/HeroRotator';
 
 export default function HomePage() {
   return (
@@ -20,6 +21,7 @@ export default function HomePage() {
         Record · 024 Categories · 042 Authorities · MA / RI / NH
       </div>
       <h1
+        aria-label="Your tax dollars should fix this faster."
         style={{
           fontFamily: 'var(--ff-display)',
           fontSize: 'clamp(54px, 10vw, 120px)',
@@ -32,8 +34,9 @@ export default function HomePage() {
       >
         Your tax dollars should
         <br />
-        <span className="hero-strike">never</span>{' '}
-        <em style={{ color: 'var(--amber)', fontStyle: 'italic', fontWeight: 900 }}>fix this faster</em>.
+        <em style={{ color: 'var(--amber)', fontStyle: 'italic', fontWeight: 900 }}>fix this</em>
+        <br />
+        <HeroRotator />
       </h1>
       <p
         style={{
