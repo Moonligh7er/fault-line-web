@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { checkRateLimit, getRateLimitKey } from '@/lib/rate-limit';
 
 // Proxy to the shared Kokoro TTS server. Avoids exposing the upstream URL
 // to browser clients and centralizes voice/speed validation. Modal scales
@@ -27,6 +28,15 @@ const REQUEST_TIMEOUT_MS = 25_000;
 export const runtime = 'nodejs';
 
 export async function POST(req: NextRequest) {
+  const perVisitor = await checkRateLimit('tts', getRateLimitKey(null, req.headers));
+  if (!perVisitor.success) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+  }
+  const global = await checkRateLimit('tts_global', 'all');
+  if (!global.success) {
+    return NextResponse.json({ error: 'Read-aloud is busy. Try again later.' }, { status: 429 });
+  }
+
   let body: { text?: string; voice?: string; speed?: number };
   try {
     body = await req.json();
