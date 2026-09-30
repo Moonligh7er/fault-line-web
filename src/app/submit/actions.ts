@@ -49,6 +49,11 @@ export async function submitReport(form: FormData): Promise<ActionResult> {
 
   const mediaUrls: { url: string; type: 'photo'; thumbnailUrl?: string }[] = [];
 
+  // Report id is generated up front so the photo can be stored under
+  // reports/<id>/ — the only path the report-media storage policy accepts
+  // (FaultLine repo, supabase/migration_022).
+  const reportId = crypto.randomUUID();
+
   // --- Photo upload with magic-byte validation ---
   const photo = form.get('photo');
   if (photo instanceof File && photo.size > 0) {
@@ -68,9 +73,9 @@ export async function submitReport(form: FormData): Promise<ActionResult> {
     }
 
     const ext = photo.type.split('/')[1] ?? 'jpg';
-    const key = `${user.id}/${crypto.randomUUID()}.${ext}`;
+    const key = `reports/${reportId}/${crypto.randomUUID()}.${ext}`;
     const { data: upload, error: uploadErr } = await supabase.storage
-      .from('report-photos')
+      .from('report-media')
       .upload(key, buf, {
         contentType: photo.type,
         cacheControl: '3600',
@@ -82,7 +87,7 @@ export async function submitReport(form: FormData): Promise<ActionResult> {
     }
 
     const { data: publicUrl } = supabase.storage
-      .from('report-photos')
+      .from('report-media')
       .getPublicUrl(upload.path);
 
     mediaUrls.push({ url: publicUrl.publicUrl, type: 'photo' });
@@ -92,6 +97,7 @@ export async function submitReport(form: FormData): Promise<ActionResult> {
   const { data: report, error: insertErr } = await supabase
     .from('reports')
     .insert({
+      id: reportId,
       user_id: parsed.data.isAnonymous ? null : user.id,
       category: parsed.data.category,
       latitude: parsed.data.latitude,
