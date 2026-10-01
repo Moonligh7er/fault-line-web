@@ -9,6 +9,7 @@ import {
   ALLOWED_MIME,
 } from '@/lib/zod-schemas';
 import { checkRateLimit, getRateLimitKey } from '@/lib/rate-limit';
+import { resolveLocation } from '@/lib/location';
 
 interface ActionResult {
   ok: boolean;
@@ -93,6 +94,10 @@ export async function submitReport(form: FormData): Promise<ActionResult> {
     mediaUrls.push({ url: publicUrl.publicUrl, type: 'photo' });
   }
 
+  // Authority + street address from the GPS point. Client-supplied values
+  // (none today) win over the reverse geocode.
+  const loc = await resolveLocation(supabase, parsed.data.latitude, parsed.data.longitude);
+
   // --- Insert report (RLS enforces user_id matches authenticated user) ---
   const { data: report, error: insertErr } = await supabase
     .from('reports')
@@ -102,10 +107,11 @@ export async function submitReport(form: FormData): Promise<ActionResult> {
       category: parsed.data.category,
       latitude: parsed.data.latitude,
       longitude: parsed.data.longitude,
-      address: parsed.data.address ?? null,
-      city: parsed.data.city ?? null,
-      state: parsed.data.state ?? null,
-      zip: parsed.data.zip ?? null,
+      address: parsed.data.address ?? loc.address,
+      city: parsed.data.city ?? loc.city,
+      state: parsed.data.state ?? loc.state,
+      zip: parsed.data.zip ?? loc.zip,
+      authority_id: loc.authorityId,
       description: parsed.data.description ?? null,
       size_rating: parsed.data.sizeRating,
       hazard_level: parsed.data.hazardLevel,

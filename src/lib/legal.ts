@@ -56,12 +56,31 @@ export interface DemandLetterResult {
 
 const HR = '━'.repeat(50);
 
-export function generateDemandLetter(input: DemandLetterInput): DemandLetterResult {
+// None of the statute entries above have been reviewed by an attorney yet
+// (mobile dataset: verificationStatus 'pending-review'; DEFERRED #22).
+// Every letter carries this until that review lands.
+export const UNREVIEWED_BANNER = [
+  '━'.repeat(60),
+  '⚠ UNREVIEWED LEGAL CONTENT',
+  '━'.repeat(60),
+  '• The statutory citation and notice period in this letter have NOT yet been reviewed by a licensed attorney.',
+  '',
+  "Before you send this letter for a live claim, verify the statute text, deadline, and recipient against your state's current law, or consult an attorney admitted in your state. Fault Line is a documentation aid, not a law firm.",
+  '━'.repeat(60),
+].join('\n');
+
+export function isLetterSupported(state: string | null | undefined): boolean {
+  return !!state && state in STATE_STATUTES;
+}
+
+/** Returns null when the report's state has no statute template — never
+ *  falls back to another state's law. */
+export function generateDemandLetter(input: DemandLetterInput): DemandLetterResult | null {
   const { report, authorityName, claimantName, damageDescription } = input;
   const clusterReportCount = input.clusterReportCount ?? 1;
 
-  const state = report.state ?? 'MA';
-  const stateLaw = STATE_STATUTES[state] ?? STATE_STATUTES.MA!;
+  const stateLaw = report.state ? STATE_STATUTES[report.state] : undefined;
+  if (!stateLaw) return null;
   const category = getCategoryInfo(report.category);
   const hazard = HAZARD_LEVELS.find((h) => h.key === report.hazard_level);
 
@@ -87,6 +106,8 @@ export function generateDemandLetter(input: DemandLetterInput): DemandLetterResu
   });
 
   const letterText = `
+${UNREVIEWED_BANNER}
+
 ${todayStr}
 
 ${authorityName}
@@ -135,7 +156,7 @@ ${damageDescription}
     : ''
 }DEMAND
 ${HR}
-${claimantName ? 'I' : 'The community'} hereby demand${claimantName ? 's' : ''} that your office:
+${claimantName ? 'I hereby demand' : 'The community hereby demands'} that your office:
 
 1. Immediately inspect the reported location;
 2. Remedy the hazardous condition within the statutory timeframe;

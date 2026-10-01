@@ -35,11 +35,11 @@ function makeReport(overrides: Partial<ReportRow> = {}): ReportRow {
 }
 
 describe('generateDemandLetter', () => {
-  it('generates a letter with MA statute by default', () => {
+  it('generates a letter with the MA statute for MA reports', () => {
     const result = generateDemandLetter({
       report: makeReport(),
       authorityName: 'City of Boston DPW',
-    });
+    })!;
     expect(result.statute).toContain('M.G.L. c. 84');
     expect(result.letterText).toContain('City of Boston DPW');
     expect(result.letterText).toContain('Pothole');
@@ -50,7 +50,7 @@ describe('generateDemandLetter', () => {
     const result = generateDemandLetter({
       report: makeReport(),
       authorityName: 'Boston',
-    });
+    })!;
     expect(result.isOverdue).toBe(true);
     expect(result.letterText).toContain('EXPIRED');
   });
@@ -59,7 +59,7 @@ describe('generateDemandLetter', () => {
     const fresh = makeReport({
       created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
     });
-    const result = generateDemandLetter({ report: fresh, authorityName: 'Boston' });
+    const result = generateDemandLetter({ report: fresh, authorityName: 'Boston' })!;
     expect(result.isOverdue).toBe(false);
   });
 
@@ -67,7 +67,7 @@ describe('generateDemandLetter', () => {
     const result = generateDemandLetter({
       report: makeReport({ state: 'RI' }),
       authorityName: 'Providence',
-    });
+    })!;
     expect(result.statute).toContain('R.I. Gen. Laws');
     expect(result.noticePeriodDays).toBe(60);
   });
@@ -76,16 +76,33 @@ describe('generateDemandLetter', () => {
     const result = generateDemandLetter({
       report: makeReport({ state: 'NH' }),
       authorityName: 'Concord',
-    });
+    })!;
     expect(result.statute).toContain('RSA 231');
   });
 
-  it('falls back to MA for unknown state', () => {
-    const result = generateDemandLetter({
-      report: makeReport({ state: 'XX' }),
-      authorityName: 'Unknown',
-    });
-    expect(result.statute).toContain('M.G.L.');
+  it('returns null for an unsupported state instead of borrowing MA law', () => {
+    expect(generateDemandLetter({ report: makeReport({ state: 'NY' }), authorityName: 'NYC' })).toBeNull();
+  });
+
+  it('returns null when the report has no state', () => {
+    expect(generateDemandLetter({ report: makeReport({ state: null }), authorityName: 'Unknown' })).toBeNull();
+  });
+
+  it('opens every letter with the unreviewed-legal-content warning', () => {
+    const result = generateDemandLetter({ report: makeReport(), authorityName: 'Boston' })!;
+    expect(result.letterText.startsWith('━')).toBe(true);
+    expect(result.letterText).toContain('UNREVIEWED LEGAL CONTENT');
+  });
+
+  it('uses correct verb agreement in the demand line', () => {
+    const community = generateDemandLetter({ report: makeReport(), authorityName: 'Boston' })!;
+    expect(community.letterText).toContain('The community hereby demands that');
+    const claimant = generateDemandLetter({
+      report: makeReport(),
+      authorityName: 'Boston',
+      claimantName: 'Jane Doe',
+    })!;
+    expect(claimant.letterText).toContain('I hereby demand that');
   });
 
   it('includes claimant name when provided', () => {
@@ -93,7 +110,7 @@ describe('generateDemandLetter', () => {
       report: makeReport(),
       authorityName: 'Boston',
       claimantName: 'Jane Doe',
-    });
+    })!;
     expect(result.letterText).toContain('Jane Doe');
   });
 
@@ -102,7 +119,7 @@ describe('generateDemandLetter', () => {
       report: makeReport(),
       authorityName: 'Boston',
       damageDescription: 'Blew out front tire, $450 repair',
-    });
+    })!;
     expect(result.letterText).toContain('DAMAGES CLAIMED');
     expect(result.letterText).toContain('Blew out front tire');
   });

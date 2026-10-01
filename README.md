@@ -32,7 +32,7 @@ This app is built defensively. Every layer is hardened:
 - **CSRF guard** — middleware rejects mutating requests (POST/PUT/PATCH/DELETE) whose `Origin` doesn't match the app.
 - **Open-redirect guard** — login `next=` param and auth callback reject anything that isn't a same-origin relative path.
 - **Zod validation** on every server action and route handler — no untrusted input reaches the database.
-- **Upstash rate limiting** (sliding window): auth (5/15m), submit (10/h), vote (60/h), upload (20/h), read (300/m). Fails closed in production.
+- **Upstash rate limiting** (sliding window): auth (5/15m), submit (10/h), vote (60/h), upload (20/h), read (300/m), tts (20/h + 1000/day site-wide). Without Upstash credentials it falls back to a per-instance in-memory limiter (weaker; set Upstash in production).
 - **Photo uploads** validated by magic-byte signatures (not just MIME), 5 MB cap, whitelist of image types only.
 - **CSV export** hardened against formula injection (`=+-@` prefixed with `'`), LIKE pattern escape on search, whitelist filters for category/status/state.
 - **No `dangerouslySetInnerHTML`, `eval`, `new Function`** — enforced by `eslint-plugin-security`.

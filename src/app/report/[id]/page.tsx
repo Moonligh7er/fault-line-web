@@ -5,6 +5,7 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { getCategoryInfo, HAZARD_LEVELS } from '@/lib/categories';
 import { env } from '@/lib/env';
 import type { ReportRow } from '@/lib/types';
+import { isLetterSupported } from '@/lib/legal';
 import VoteButtons from './vote-buttons';
 import ShareButton from '@/components/ShareButton';
 import PhotoLightbox from '@/components/PhotoLightbox';
@@ -165,9 +166,11 @@ export default async function ReportDetailPage({ params }: PageProps) {
         />
         {user && (
           <>
-            <Link href={`/report/${report.id}/legal`} className="btn btn-outline">
-              Legal demand letter
-            </Link>
+            {isLetterSupported(report.state) && (
+              <Link href={`/report/${report.id}/legal`} className="btn btn-outline">
+                Legal demand letter
+              </Link>
+            )}
             <Link href={`/report/${report.id}/insurance`} className="btn btn-outline">
               Insurance claim package
             </Link>

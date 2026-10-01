@@ -44,6 +44,24 @@ export default async function LegalLetterPage({ params }: PageProps) {
 
   const letter = generateDemandLetter({ report, authorityName });
 
+  if (!letter) {
+    return (
+      <div style={{ maxWidth: 780, margin: '0 auto' }}>
+        <Link href={`/report/${id}`} style={{ fontSize: 14, color: 'var(--text-muted)' }}>
+          ← Back to report
+        </Link>
+        <h1 style={{ fontSize: 28, fontWeight: 800, margin: '12px 0 12px' }}>
+          Legal Demand Letter
+        </h1>
+        <p className="card" style={{ color: 'var(--text-secondary)' }}>
+          {report.state
+            ? `Letter templates currently cover Massachusetts, Rhode Island, and New Hampshire. This report is in ${report.state}, so no letter can be generated yet — we won't cite another state's law.`
+            : "We couldn't determine which state this report is in, so no letter can be generated. Letters depend on state law, and we won't guess."}
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div style={{ maxWidth: 780, margin: '0 auto' }}>
       <Link href={`/report/${id}`} style={{ fontSize: 14, color: 'var(--text-muted)' }}>

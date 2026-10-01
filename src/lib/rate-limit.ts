@@ -42,18 +42,45 @@ export interface RateLimitResult {
   limit: number;
 }
 
+// Fallback when Upstash isn't configured: a per-instance in-memory sliding
+// window. Weaker than Redis (each serverless instance counts separately),
+// but it keeps the site usable instead of refusing every request — the old
+// fail-closed behavior blocked sign-in and submission in production. DB-side
+// limits (report insert trigger, edge-function limits) still apply.
+const UNIT_MS: Record<string, number> = { s: 1000, m: 60_000, h: 3_600_000, d: 86_400_000 };
+const memoryHits = new Map<string, number[]>();
+let warnedNoRedis = false;
+
+function memoryLimit(name: LimitName, identifier: string): RateLimitResult {
+  const [max, window] = windows[name] as [number, string];
+  const [amount, unit] = window.split(' ');
+  const windowMs = Number(amount) * (UNIT_MS[unit ?? ''] ?? 60_000);
+  const now = Date.now();
+  const key = `${name}:${identifier}`;
+  const hits = (memoryHits.get(key) ?? []).filter((t) => now - t < windowMs);
+  const success = hits.length < max;
+  if (success) hits.push(now);
+  memoryHits.set(key, hits);
+  if (memoryHits.size > 10_000) memoryHits.clear(); // crude bound on memory
+  return {
+    success,
+    remaining: Math.max(0, max - hits.length),
+    reset: (hits[0] ?? now) + windowMs,
+    limit: max,
+  };
+}
+
 export async function checkRateLimit(
   name: LimitName,
   identifier: string
 ): Promise<RateLimitResult> {
   const limiter = getLimiter(name);
   if (!limiter) {
-    // Fail-open in dev when Upstash isn't configured. In production,
-    // deployment validation enforces Upstash credentials exist.
-    if (process.env.NODE_ENV === 'production') {
-      return { success: false, remaining: 0, reset: 0, limit: 0 };
+    if (process.env.NODE_ENV === 'production' && !warnedNoRedis) {
+      warnedNoRedis = true;
+      console.warn('[rate-limit] UPSTASH_REDIS_REST_URL/TOKEN not set — using per-instance in-memory limits');
     }
-    return { success: true, remaining: 999, reset: 0, limit: 999 };
+    return memoryLimit(name, identifier);
   }
   return limiter.limit(identifier);
 }
