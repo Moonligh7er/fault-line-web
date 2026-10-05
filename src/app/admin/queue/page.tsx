@@ -1,11 +1,12 @@
 import { redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
-import { isAdminEmail } from '@/lib/admin';
+import { isAdmin } from '@/lib/admin';
 import QueueList, { type QueueRow } from './queue-list';
+import { AutoSendToggle, OutboundReviewList, type OutboundRow } from './outbound-review';
 
 export const metadata = {
-  title: 'Escalation Queue',
-  description: 'Admin view of escalations awaiting manual web-form submission',
+  title: 'Outbound Queue',
+  description: 'Admin review of outbound messages to authorities',
   robots: { index: false, follow: false },
 };
 
@@ -16,7 +17,40 @@ export default async function EscalationQueuePage() {
   } = await supabase.auth.getUser();
 
   if (!user) redirect('/login?next=/admin/queue');
-  if (!isAdminEmail(user.email)) redirect('/');
+  if (!(await isAdmin(supabase))) redirect('/');
+
+  // Outbound review queue (migration 025). RLS lets only admins read these.
+  const [{ data: autoSendRow }, { data: pendingRaw }, { data: recentRaw }] = await Promise.all([
+    supabase.from('app_settings').select('value').eq('key', 'auto_send').maybeSingle(),
+    supabase
+      .from('outbound_messages')
+      .select('id, ref, kind, methods, subject, body, created_at, authorities ( name )')
+      .eq('status', 'pending_review')
+      .order('created_at', { ascending: true })
+      .limit(100),
+    supabase
+      .from('outbound_messages')
+      .select('ref, kind, status, sent_method, sent_recipient, error, reviewed_by, updated_at')
+      .in('status', ['sent', 'failed', 'rejected', 'sending', 'approved'])
+      .order('updated_at', { ascending: false })
+      .limit(20),
+  ]);
+  const autoSend = autoSendRow?.value === true;
+  const pending: OutboundRow[] = (pendingRaw ?? []).map((r) => {
+    const authority = Array.isArray(r.authorities) ? r.authorities[0] : r.authorities;
+    return {
+      id: r.id,
+      ref: r.ref,
+      kind: r.kind,
+      authorityName: authority?.name ?? '(unknown authority)',
+      methods: ((r.methods ?? []) as { method?: string; endpoint?: string }[]).map(
+        (m) => `${m.method}: ${m.endpoint}`,
+      ),
+      subject: r.subject,
+      body: r.body,
+      createdAt: r.created_at,
+    };
+  });
 
   // Pull escalation_log rows that need manual handling, newest first.
   // Joins in the cluster + authority so we can render a complete card per row.
@@ -66,8 +100,32 @@ export default async function EscalationQueuePage() {
 
   return (
     <div>
+      <AutoSendToggle enabled={autoSend} />
+
+      <h2 style={{ fontSize: 26, fontWeight: 900, marginBottom: 12 }}>
+        Awaiting review <span className="mono" style={{ fontSize: 14, color: 'var(--steel-light)' }}>({pending.length})</span>
+      </h2>
+      <OutboundReviewList rows={pending} />
+
+      <h2 style={{ fontSize: 22, fontWeight: 800, margin: '32px 0 12px' }}>Recent outbound</h2>
+      {(recentRaw ?? []).length === 0 ? (
+        <p style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>Nothing sent yet.</p>
+      ) : (
+        <div className="card mono" style={{ fontSize: 12, overflowX: 'auto' }}>
+          {(recentRaw ?? []).map((r) => (
+            <div key={r.ref} style={{ padding: '6px 0', borderBottom: '1px dashed var(--rail)' }}>
+              <strong>{r.ref}</strong> · {r.status}
+              {r.sent_method ? ` · ${r.sent_method} → ${r.sent_recipient}` : ''}
+              {r.error ? ` · ${r.error}` : ''}
+              {r.reviewed_by ? ` · reviewed by ${r.reviewed_by}` : ''} · {new Date(r.updated_at).toLocaleString()}
+            </div>
+          ))}
+        </div>
+      )}
+
       <header
         style={{
+          marginTop: 40,
           paddingBottom: 16,
           marginBottom: 24,
           borderBottom: '1px solid var(--rail)',

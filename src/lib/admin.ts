@@ -1,19 +1,10 @@
-// Admin allowlist. Source of truth: process.env.ADMIN_EMAILS, comma-separated.
-// Empty / unset env means no admins — defense-in-depth so a misconfigured
-// deploy locks itself rather than silently letting any signed-in user through.
-//
-// Migrate to a `profiles.role` column once we need anything more nuanced
-// (per-feature permissions, multi-org scoping, etc.).
+import type { SupabaseClient } from '@supabase/supabase-js';
 
-const RAW = process.env.ADMIN_EMAILS ?? '';
-
-const ADMIN_EMAILS: ReadonlySet<string> = new Set(
-  RAW.split(',')
-    .map((s) => s.trim().toLowerCase())
-    .filter(Boolean),
-);
-
-export function isAdminEmail(email: string | null | undefined): boolean {
-  if (!email) return false;
-  return ADMIN_EMAILS.has(email.toLowerCase());
+// Admin = a row in public.admin_users (FaultLine migration 025), checked by
+// the is_admin() RPC under the caller's own session. The same check guards
+// the DB side (RLS on outbound_messages / app_settings, review RPCs), so the
+// UI and the data can't disagree — and no service-role key is needed here.
+export async function isAdmin(supabase: SupabaseClient): Promise<boolean> {
+  const { data, error } = await supabase.rpc('is_admin');
+  return !error && data === true;
 }

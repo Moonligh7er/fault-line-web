@@ -3,6 +3,7 @@ import { headers } from 'next/headers';
 import Script from 'next/script';
 import Link from 'next/link';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { isAdmin as checkAdmin } from '@/lib/admin';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -48,8 +49,7 @@ export default async function RootLayout({
     data: { user },
   } = await supabase.auth.getUser();
   const isSignedIn = Boolean(user);
-  const ADMIN_EMAILS = new Set(['moonligh7er@gmail.com', 'moonlit-social-labs@proton.me']);
-  const isAdmin = Boolean(user?.email && ADMIN_EMAILS.has(user.email.toLowerCase()));
+  const isAdmin = isSignedIn && (await checkAdmin(supabase));
 
   return (
     <html lang="en">
