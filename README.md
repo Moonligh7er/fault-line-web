@@ -39,6 +39,18 @@ This app is built defensively. Every layer is hardened:
 - **RLS-first** — all DB access respects Supabase Row Level Security. Service role key is server-only and never exposed to the client.
 - **Error pages** never leak stack traces — only a digest for Sentry correlation.
 
+## Open311 feed (for cities and data tools)
+
+Read-only [Open311 GeoReport v2](http://wiki.open311.org/GeoReport_v2/) API, JSON only, public, CORS-enabled, rate-limited. It serves **only reports that originated in Fault Line** — any data ever imported from a city's own 311 system lives elsewhere and is never served here.
+
+| Endpoint | Notes |
+|---|---|
+| `GET /open311/v2/services.json` | Report categories as services |
+| `GET /open311/v2/requests.json` | Filters: `jurisdiction_id` (authority UUID), `service_code`, `status=open\|closed`, `start_date`, `end_date` (default last 90 days), `service_request_id` (comma list). Max 1000 results. |
+| `GET /open311/v2/requests/<uuid>.json` | One request (one-item array, per spec) |
+
+Example: `https://app.fault-line.dev/open311/v2/requests.json?jurisdiction_id=<authority-uuid>&status=open`
+
 ## Stack
 
 - Next.js 15 + React 19 + TypeScript (strict)

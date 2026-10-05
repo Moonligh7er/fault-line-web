@@ -84,6 +84,13 @@ const config: NextConfig = {
           },
         ],
       },
+      // Open311 feed is public open data: other origins (city 311 systems,
+      // civic-data tools) must be able to read it. Later rules override
+      // earlier ones for the same header key.
+      {
+        source: '/open311/:path*',
+        headers: [{ key: 'Cross-Origin-Resource-Policy', value: 'cross-origin' }],
+      },
     ];
   },
 };
