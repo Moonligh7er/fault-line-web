@@ -3,6 +3,7 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { isAdmin } from '@/lib/admin';
 import QueueList, { type QueueRow } from './queue-list';
 import { AutoSendToggle, OutboundReviewList, type OutboundRow } from './outbound-review';
+import { InboundReviewList, ReplySettings, type InboundRow } from './inbound-review';
 
 export const metadata = {
   title: 'Outbound Queue',
@@ -20,8 +21,8 @@ export default async function EscalationQueuePage() {
   if (!(await isAdmin(supabase))) redirect('/');
 
   // Outbound review queue (migration 025). RLS lets only admins read these.
-  const [{ data: autoSendRow }, { data: pendingRaw }, { data: recentRaw }] = await Promise.all([
-    supabase.from('app_settings').select('value').eq('key', 'auto_send').maybeSingle(),
+  const [{ data: settingsRows }, { data: pendingRaw }, { data: recentRaw }, { data: inboundRaw }] = await Promise.all([
+    supabase.from('app_settings').select('key, value'),
     supabase
       .from('outbound_messages')
       .select('id, ref, kind, methods, subject, body, created_at, authorities ( name )')
@@ -34,8 +35,28 @@ export default async function EscalationQueuePage() {
       .in('status', ['sent', 'failed', 'rejected', 'sending', 'approved'])
       .order('updated_at', { ascending: false })
       .limit(20),
+    supabase
+      .from('inbound_messages')
+      .select('id, ref, from_address, subject, reply_excerpt, suggested_status, outbound_id, received_at')
+      .in('status', ['pending_review', 'unmatched'])
+      .order('received_at', { ascending: false })
+      .limit(100),
   ]);
-  const autoSend = autoSendRow?.value === true;
+  const setting = (key: string) => (settingsRows ?? []).find((r) => r.key === key)?.value;
+  const autoSend = setting('auto_send') === true;
+  const autoApply = setting('auto_apply_replies') === true;
+  const replyToValue = setting('reply_to');
+  const replyTo = typeof replyToValue === 'string' ? replyToValue : '';
+  const inbound: InboundRow[] = (inboundRaw ?? []).map((r) => ({
+    id: r.id,
+    ref: r.ref,
+    from: r.from_address,
+    subject: r.subject,
+    excerpt: r.reply_excerpt,
+    suggested: r.suggested_status,
+    matched: !!r.outbound_id,
+    receivedAt: r.received_at,
+  }));
   const pending: OutboundRow[] = (pendingRaw ?? []).map((r) => {
     const authority = Array.isArray(r.authorities) ? r.authorities[0] : r.authorities;
     return {
@@ -106,6 +127,13 @@ export default async function EscalationQueuePage() {
         Awaiting review <span className="mono" style={{ fontSize: 14, color: 'var(--steel-light)' }}>({pending.length})</span>
       </h2>
       <OutboundReviewList rows={pending} />
+
+      <h2 style={{ fontSize: 26, fontWeight: 900, margin: '32px 0 12px' }}>
+        Replies from authorities{' '}
+        <span className="mono" style={{ fontSize: 14, color: 'var(--steel-light)' }}>({inbound.length})</span>
+      </h2>
+      <ReplySettings autoApply={autoApply} replyTo={replyTo} />
+      <InboundReviewList rows={inbound} />
 
       <h2 style={{ fontSize: 22, fontWeight: 800, margin: '32px 0 12px' }}>Recent outbound</h2>
       {(recentRaw ?? []).length === 0 ? (
