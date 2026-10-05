@@ -121,6 +121,9 @@ export default async function EscalationQueuePage() {
 
   return (
     <div>
+      <p style={{ textAlign: 'right', marginBottom: 8 }}>
+        <a href="/admin/api-keys">API keys →</a>
+      </p>
       <AutoSendToggle enabled={autoSend} />
 
       <h2 style={{ fontSize: 26, fontWeight: 900, marginBottom: 12 }}>

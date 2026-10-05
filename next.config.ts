@@ -91,6 +91,11 @@ const config: NextConfig = {
         source: '/open311/:path*',
         headers: [{ key: 'Cross-Origin-Resource-Policy', value: 'cross-origin' }],
       },
+      // Keyed read API (AI agents, tools) — key-authenticated, so cross-origin is fine.
+      {
+        source: '/api/v1/:path*',
+        headers: [{ key: 'Cross-Origin-Resource-Policy', value: 'cross-origin' }],
+      },
     ];
   },
 };
