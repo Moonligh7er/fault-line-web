@@ -84,7 +84,7 @@ export default function FeedbackForm() {
             style={{
               padding: '10px 22px',
               background: tab === id ? 'var(--primary)' : 'var(--bg-card)',
-              color: tab === id ? '#fff' : 'var(--text-secondary)',
+              color: tab === id ? 'var(--tunnel-deep)' : 'var(--text-secondary)',
               border: '1px solid ' + (tab === id ? 'var(--primary)' : 'var(--border)'),
             }}
           >

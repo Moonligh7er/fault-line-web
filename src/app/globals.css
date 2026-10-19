@@ -93,6 +93,13 @@ a {
   text-decoration: none;
 }
 
+/* Links inside running text need more than color to stand out (WCAG 1.4.1). */
+p a,
+li a {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 a:hover,
 a:focus-visible {
   color: var(--amber-bright);

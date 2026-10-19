@@ -51,9 +51,9 @@ export function buildCsp({ nonce, isDev }: BuildCspOptions): string {
     `default-src 'self'`,
     `script-src ${scriptSrc.join(' ')}`,
     `script-src-elem ${scriptSrc.join(' ')}`,
-    `style-src 'self' 'unsafe-inline' https://unpkg.com`, // Leaflet CSS from CDN
+    `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com`,
     `img-src 'self' data: blob: https://*.supabase.co https://tile.openstreetmap.org https://unpkg.com`,
-    `font-src 'self' data:`,
+    `font-src 'self' data: https://fonts.gstatic.com`,
     `connect-src ${connectSrc.join(' ')}`,
     `media-src 'self' blob: https://*.supabase.co`,
     `object-src 'none'`,

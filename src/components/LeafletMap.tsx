@@ -2,6 +2,11 @@
 
 import { MapContainer, TileLayer, Marker, Popup, Circle } from 'react-leaflet';
 import MarkerClusterGroup from 'react-leaflet-cluster';
+// Bundled here instead of three render-blocking unpkg <link>s in the root
+// layout, so only map pages pay for them.
+import 'leaflet/dist/leaflet.css';
+import 'leaflet.markercluster/dist/MarkerCluster.css';
+import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import { Icon } from 'leaflet';
 import Link from 'next/link';
 import { getCategoryInfo } from '@/lib/categories';

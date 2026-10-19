@@ -54,20 +54,8 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link
-          rel="stylesheet"
-          href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-          crossOrigin=""
-        />
-        <link
-          rel="stylesheet"
-          href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"
-        />
-        <link
-          rel="stylesheet"
-          href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"
-        />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
       </head>
       <body>
         <header className="site-header">
@@ -80,7 +68,7 @@ export default async function RootLayout({
             <Link href="/submit">Report</Link>
             <Link href="/dashboard">Dashboard</Link>
             <Link href="/authority">Authorities</Link>
-            <Link href="/feedback" className="active-dev-pill" aria-label="Feedback (Beta)">
+            <Link href="/feedback" className="active-dev-pill" aria-label="Beta feedback">
               <span className="active-dev-dot" aria-hidden="true" />
               Beta
             </Link>

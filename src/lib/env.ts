@@ -29,7 +29,8 @@ const clientSchema = z.object({
   NEXT_PUBLIC_APP_ORIGIN: z.string().url(),
   NEXT_PUBLIC_SITE_NAME: z.string().default('Fault Line'),
   NEXT_PUBLIC_SUPABASE_URL: z.string().url(),
-  NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1),
+  // trim(): a stray newline in the Vercel value broke the realtime websocket URL.
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().trim().min(1),
   NEXT_PUBLIC_SENTRY_DSN: z.string().url().optional(),
   NEXT_PUBLIC_GA_MEASUREMENT_ID: z.string().optional(),
 });
