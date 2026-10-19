@@ -96,7 +96,7 @@ export async function submitReport(form: FormData): Promise<ActionResult> {
 
   // Authority + street address from the GPS point. Client-supplied values
   // (none today) win over the reverse geocode.
-  const loc = await resolveLocation(supabase, parsed.data.latitude, parsed.data.longitude);
+  const loc = await resolveLocation(supabase, parsed.data.latitude, parsed.data.longitude, parsed.data.category);
 
   // --- Insert report (RLS enforces user_id matches authenticated user) ---
   const { data: report, error: insertErr } = await supabase

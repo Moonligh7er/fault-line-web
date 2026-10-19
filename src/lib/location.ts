@@ -62,15 +62,20 @@ export function parseNominatimAddress(body: unknown): GeocodeResult {
   return { address: street, city, state, zip };
 }
 
-/** Authority by boundary polygon, falling back to a city/state match. */
+/**
+ * Authority for a point: road owner for roadway categories on a state-owned
+ * road, else the enclosing town/city/county boundary (migration 030),
+ * falling back to a city/state match.
+ */
 export async function resolveLocation(
   supabase: SupabaseClient,
   lat: number,
   lng: number,
+  category?: string,
 ): Promise<ResolvedLocation> {
   const [geo, polygon] = await Promise.all([
     reverseGeocode(lat, lng),
-    supabase.rpc('find_authority_by_point', { lat, lng }),
+    supabase.rpc('find_authority_by_point', { lat, lng, p_category: category ?? null }),
   ]);
 
   type AuthorityHit = { id: string; city: string | null; state: string | null };
