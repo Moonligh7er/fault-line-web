@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import BetaBadge from '@/components/BetaBadge';
 
 export const metadata: Metadata = {
   title: 'About',
@@ -37,7 +38,7 @@ export default function AboutPage() {
 
   return (
     <article style={{ maxWidth: 720, margin: '0 auto' }}>
-      <h1 style={{ fontSize: 32, fontWeight: 900, marginBottom: 8 }}>About Fault Line</h1>
+      <h1 style={{ fontSize: 32, fontWeight: 900, marginBottom: 8 }}>About Fault Line<BetaBadge /></h1>
       <p style={{ color: 'var(--text-muted)', fontSize: 14, marginBottom: 24 }}>
         A product of Moonlit Social Labs
       </p>

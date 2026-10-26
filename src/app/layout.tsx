@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { isAdmin as checkAdmin } from '@/lib/admin';
 import './globals.css';
+import BetaBadge from '@/components/BetaBadge';
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_ORIGIN ?? 'http://localhost:3000'),
@@ -61,6 +62,7 @@ export default async function RootLayout({
         <header className="site-header">
           <Link href="/" className="brand">
             Fault<span>&nbsp;Line</span>
+            <BetaBadge />
           </Link>
           <nav aria-label="Main">
             <Link href="/map">Map</Link>

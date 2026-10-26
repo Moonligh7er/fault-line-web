@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import FeedbackForm from './feedback-form';
+import BetaBadge from '@/components/BetaBadge';
 
 export const metadata: Metadata = {
   title: 'Feedback & Feature Requests',
@@ -41,7 +42,7 @@ export default function FeedbackPage() {
           Beta
         </span>
         <h1 style={{ fontSize: 'clamp(28px, 5vw, 40px)', fontWeight: 900, marginBottom: 8 }}>
-          Help Shape Fault Line
+          Help Shape Fault Line<BetaBadge />
         </h1>
         <p style={{ color: 'var(--text-secondary)', fontSize: 16, maxWidth: 520, margin: '0 auto' }}>
           We&apos;re actively building this app. Your feedback directly influences what we build next.
