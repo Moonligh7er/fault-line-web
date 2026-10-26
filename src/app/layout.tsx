@@ -60,8 +60,8 @@ export default async function RootLayout({
       </head>
       <body>
         <header className="site-header">
-          <Link href="/" className="brand">
-            Fault<span>&nbsp;Line</span>
+          <Link href="/" className="brand" aria-label="Fault Line beta, home">
+            Fault<span className="brand-slash" aria-hidden="true" /><span>Line</span>
             <BetaBadge />
           </Link>
           <nav aria-label="Main">

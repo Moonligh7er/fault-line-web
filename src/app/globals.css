@@ -163,7 +163,7 @@ em {
 .site-header .brand {
   display: inline-flex;
   align-items: center;
-  gap: 14px;
+  gap: 10px;
   font-family: var(--ff-display);
   font-weight: 900;
   font-style: italic;
@@ -179,10 +179,10 @@ em {
   color: var(--amber);
 }
 
-.site-header .brand::before {
-  content: '';
+/* Fault / Line — the amber slash sits between the words (matches fault-line.dev). */
+.site-header .brand .brand-slash {
   display: inline-block;
-  width: 10px;
+  width: 8px;
   height: 28px;
   background: var(--amber);
   transform: skewX(-15deg);
@@ -226,7 +226,7 @@ em {
   .site-header .brand {
     font-size: 24px;
   }
-  .site-header .brand::before {
+  .site-header .brand .brand-slash {
     height: 24px;
   }
   .site-header nav {
@@ -265,7 +265,7 @@ em {
 }
 /* Beats `.site-header .brand span` (amber italic) for the badge inside the brand. */
 .site-header .brand .beta-badge {
-  margin-left: -4px;
+  margin-left: 2px;
   color: #FFFFFF;
   font-style: normal;
 }
