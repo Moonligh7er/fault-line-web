@@ -14,20 +14,20 @@ export default async function ProfilePage() {
 
   if (!user) redirect('/login?next=/profile');
 
-  const [{ data: profile }, { data: reports }] = await Promise.all([
+  const [{ data: profile }, { data: reportData }] = await Promise.all([
     supabase
       .from('profiles')
       .select('*')
       .eq('id', user.id)
       .maybeSingle<ProfileRow>(),
+    // my_reports() includes the user's anonymous reports, whose owner is kept
+    // out of the public reports.user_id (migration 036).
     supabase
-      .from('reports')
-      .select('*')
-      .eq('user_id', user.id)
+      .rpc('my_reports')
       .order('created_at', { ascending: false })
-      .limit(50)
-      .returns<ReportRow[]>(),
+      .limit(50),
   ]);
+  const reports = (reportData ?? []) as ReportRow[];
 
   return (
     <div style={{ maxWidth: 720, margin: '0 auto' }}>

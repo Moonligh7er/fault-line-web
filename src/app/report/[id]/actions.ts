@@ -36,14 +36,14 @@ export async function submitVote(input: {
   }
 
   // Check owner (RLS/RPC also enforces this, but we fail fast)
-  const { data: report } = await supabase
-    .from('reports')
-    .select('user_id')
-    .eq('id', parsed.data.reportId)
-    .maybeSingle();
+  const [{ data: report }, { data: mine }] = await Promise.all([
+    supabase.from('reports').select('id').eq('id', parsed.data.reportId).maybeSingle(),
+    // owns_report covers anonymous reports too (migration 036).
+    supabase.rpc('owns_report', { p_report_id: parsed.data.reportId }),
+  ]);
 
   if (!report) return { ok: false, message: 'Report not found.' };
-  if (report.user_id === user.id) {
+  if (mine === true) {
     return { ok: false, message: "You can't vote on your own report." };
   }
 

@@ -55,7 +55,10 @@ export default async function ReportDetailPage({ params }: PageProps) {
 
   const info = getCategoryInfo(report.category);
   const hazard = HAZARD_LEVELS.find((h) => h.key === report.hazard_level);
-  const isOwner = user?.id === report.user_id;
+  // owns_report covers anonymous reports, whose owner isn't in report.user_id.
+  const isOwner = user
+    ? (await supabase.rpc('owns_report', { p_report_id: report.id })).data === true
+    : false;
 
   return (
     <article style={{ maxWidth: 720, margin: '0 auto' }}>
