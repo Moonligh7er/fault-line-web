@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { isAdmin } from '@/lib/admin';
 import QueueList, { type QueueRow } from './queue-list';
-import { AutoSendToggle, OutboundReviewList, type OutboundRow } from './outbound-review';
+import { AutoSendToggle, OutboundReviewList, SandboxToggle, type OutboundRow } from './outbound-review';
 import { InboundReviewList, ReplySettings, type InboundRow } from './inbound-review';
 
 export const metadata = {
@@ -44,6 +44,7 @@ export default async function EscalationQueuePage() {
   ]);
   const setting = (key: string) => (settingsRows ?? []).find((r) => r.key === key)?.value;
   const autoSend = setting('auto_send') === true;
+  const sandbox = setting('sandbox_mode') === true;
   const autoApply = setting('auto_apply_replies') === true;
   const replyToValue = setting('reply_to');
   const replyTo = typeof replyToValue === 'string' ? replyToValue : '';
@@ -124,6 +125,7 @@ export default async function EscalationQueuePage() {
       <p style={{ textAlign: 'right', marginBottom: 8 }}>
         <a href="/admin/api-keys">API keys →</a>
       </p>
+      <SandboxToggle enabled={sandbox} />
       <AutoSendToggle enabled={autoSend} />
 
       <h2 style={{ fontSize: 26, fontWeight: 900, marginBottom: 12 }}>

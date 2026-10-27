@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { reviewOutbound, setAutoSend } from './actions';
+import { reviewOutbound, setAutoSend, setSandboxMode } from './actions';
 
 export interface OutboundRow {
   id: string;
@@ -43,6 +43,53 @@ export function AutoSendToggle({ enabled }: { enabled: boolean }) {
       </div>
       <button type="button" className={on ? 'btn btn-outline' : 'btn btn-primary'} onClick={toggle} disabled={pending}>
         {pending ? 'Saving…' : on ? 'Require review' : 'Turn on auto-send'}
+      </button>
+    </div>
+  );
+}
+
+export function SandboxToggle({ enabled }: { enabled: boolean }) {
+  const [on, setOn] = useState(enabled);
+  const [pending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+
+  function toggle() {
+    const next = !on;
+    if (next && !confirm('Turn on sandbox mode? While it is on, NOTHING reaches a real authority — including real residents’ reports. Use it to rehearse, then turn it off.')) return;
+    setError(null);
+    startTransition(async () => {
+      const res = await setSandboxMode(next);
+      if (res.ok) setOn(next);
+      else setError(res.error);
+    });
+  }
+
+  return (
+    <div
+      className="card"
+      style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', marginBottom: 24,
+        ...(on ? { borderColor: 'var(--amber)', boxShadow: '0 0 0 2px var(--amber-glow)' } : {}),
+      }}
+    >
+      <div>
+        <div className="mono" style={{ fontSize: 11, letterSpacing: '2px', textTransform: 'uppercase', color: on ? 'var(--amber)' : 'var(--steel-light)' }}>
+          Sandbox mode
+        </div>
+        <div style={{ fontSize: 18, fontWeight: 700, marginTop: 4 }}>
+          {on
+            ? 'SANDBOX ON — nothing reaches real authorities.'
+            : 'Off — approved messages go to real authorities.'}
+        </div>
+        <p style={{ fontSize: 14, color: 'var(--text-secondary)', margin: '6px 0 0', maxWidth: 620 }}>
+          {on
+            ? 'Emails go to Resend’s test inbox, SeeClickFix submissions are planned but not posted, Open311 is logged only, and web forms are filled without submitting. Results show under Recent outbound as sandbox:…'
+            : 'Turn on to rehearse the whole pipeline with real reports and real routing, without contacting any city.'}
+        </p>
+        {error && <p className="error">{error}</p>}
+      </div>
+      <button type="button" className={on ? 'btn btn-primary' : 'btn btn-outline'} onClick={toggle} disabled={pending}>
+        {pending ? 'Saving…' : on ? 'Turn sandbox off' : 'Turn on sandbox'}
       </button>
     </div>
   );

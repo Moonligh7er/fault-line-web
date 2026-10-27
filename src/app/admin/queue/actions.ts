@@ -28,6 +28,19 @@ export async function setAutoSend(enabled: boolean): Promise<Result> {
   return { ok: true };
 }
 
+/**
+ * Sandbox mode (migration 037): while on, dispatch-outbound sends nothing to
+ * real authorities (email → Resend test sink, SeeClickFix planned only,
+ * Open311 logged, web forms dry-run) and writes no public notice record.
+ */
+export async function setSandboxMode(enabled: boolean): Promise<Result> {
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase.rpc('set_setting', { p_key: 'sandbox_mode', p_value: enabled });
+  if (error) return { ok: false, error: error.message };
+  revalidatePath('/admin/queue');
+  return { ok: true };
+}
+
 /** Web-form escalations a human submitted by hand (or gave up on). */
 export async function markSubmitted(logId: string, newStatus: 'sent' | 'failed'): Promise<Result> {
   const supabase = await createSupabaseServerClient();

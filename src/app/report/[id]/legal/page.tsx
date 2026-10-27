@@ -71,7 +71,10 @@ export default async function LegalLetterPage({ params }: PageProps) {
         Legal Demand Letter
       </h1>
       <p style={{ color: 'var(--text-secondary)', marginBottom: 16 }}>
-        Formal notice-of-defect letter citing {letter.statute}
+        {letter.framing === 'defective-highway'
+          ? 'Formal notice-of-defect letter'
+          : 'Formal notice letter'}{' '}
+        citing {letter.statute}
         {letter.isOverdue && (
           <span
             style={{
