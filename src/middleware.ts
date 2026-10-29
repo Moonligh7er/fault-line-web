@@ -33,7 +33,7 @@ export async function middleware(request: NextRequest) {
   // Build headers with nonce so server components can read it
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set('x-nonce', nonce);
-  const csp = buildCsp({ nonce, isDev });
+  const csp = buildCsp({ nonce, isDev, embeddable: url.pathname.startsWith('/embed/') });
   requestHeaders.set('content-security-policy', csp);
 
   let response = NextResponse.next({ request: { headers: requestHeaders } });

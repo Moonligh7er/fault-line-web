@@ -31,7 +31,8 @@ const config: NextConfig = {
   async headers() {
     return [
       {
-        source: '/:path*',
+        // /embed/* is framed by city websites; everything else is DENY.
+        source: '/((?!embed/).*)',
         headers: [
           {
             key: 'Strict-Transport-Security',

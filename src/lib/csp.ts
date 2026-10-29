@@ -12,13 +12,15 @@ export function generateNonce(): string {
 interface BuildCspOptions {
   nonce: string;
   isDev: boolean;
+  /** /embed/* pages may be framed by any site (city websites). */
+  embeddable?: boolean;
 }
 
 /**
  * Build a strict CSP. No unsafe-inline, no unsafe-eval (dev needs unsafe-eval
  * for React Fast Refresh). Scripts use per-request nonces.
  */
-export function buildCsp({ nonce, isDev }: BuildCspOptions): string {
+export function buildCsp({ nonce, isDev, embeddable = false }: BuildCspOptions): string {
   const scriptSrc = [
     "'self'",
     `'nonce-${nonce}'`,
@@ -59,7 +61,7 @@ export function buildCsp({ nonce, isDev }: BuildCspOptions): string {
     `object-src 'none'`,
     `base-uri 'self'`,
     `form-action 'self'`,
-    `frame-ancestors 'none'`,
+    embeddable ? `frame-ancestors *` : `frame-ancestors 'none'`,
     `frame-src 'none'`,
     `worker-src 'self' blob:`,
     `manifest-src 'self'`,

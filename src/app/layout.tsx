@@ -51,6 +51,10 @@ export default async function RootLayout({
   } = await supabase.auth.getUser();
   const isSignedIn = Boolean(user);
   const isAdmin = isSignedIn && (await checkAdmin(supabase));
+  // City staff see their portal; invites are claimed on first visit to /portal.
+  const { count: cityCount } = isSignedIn
+    ? await supabase.from('city_members').select('city_account_id', { count: 'exact', head: true }).eq('user_id', user!.id)
+    : { count: 0 };
 
   return (
     <html lang="en">
@@ -74,7 +78,9 @@ export default async function RootLayout({
               <span className="active-dev-dot" aria-hidden="true" />
               Beta
             </Link>
+            {(cityCount ?? 0) > 0 && <Link href="/portal">City portal</Link>}
             {isAdmin && <Link href="/admin/queue">Queue</Link>}
+            {isAdmin && <Link href="/admin/cities">Cities</Link>}
             {isSignedIn ? (
               <>
                 <Link href="/profile">Profile</Link>
