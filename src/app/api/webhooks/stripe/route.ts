@@ -78,8 +78,10 @@ async function setStatus(admin: Admin, city: { id: string; status: string }, sta
     patch.suspended_at = null;
     patch.suspended_reason = null;
   }
-  await admin.from('city_accounts').update(patch).eq('id', city.id);
-  if (city.status !== status) {
+  // Conditional on the status we read, so two events racing (invoice.paid and
+  // subscription.updated arrive together) log and notify the change once.
+  const { data: changed } = await admin.from('city_accounts').update(patch).eq('id', city.id).eq('status', city.status).select('id');
+  if (city.status !== status && changed?.length) {
     const kind = status === 'suspended' ? 'suspended' : status === 'ended' ? 'ended' : city.status === 'suspended' ? 'reactivated' : 'active';
     await logCityEvent(admin, city.id, kind, { stripe_event: eventId }, `stripe:${eventId}`);
   }
