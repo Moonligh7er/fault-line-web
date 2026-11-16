@@ -14,7 +14,6 @@ import type { ReportRow } from './types';
 function makeReport(overrides: Partial<ReportRow> = {}): ReportRow {
   return {
     id: '550e8400-e29b-41d4-a716-446655440000',
-    user_id: null,
     category: 'pothole',
     latitude: 42.3601,
     longitude: -71.0589,

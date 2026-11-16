@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { getCategoryInfo } from '@/lib/categories';
 import type { AuthorityRow, ReportRow } from '@/lib/types';
+import { REPORT_COLUMNS } from '@/lib/report-columns';
 
 const idSchema = z.string().uuid();
 
@@ -39,7 +40,7 @@ export default async function AuthorityDetailPage({ params }: PageProps) {
       .maybeSingle<AuthorityRow>(),
     supabase
       .from('reports')
-      .select('*', { count: 'exact' })
+      .select(REPORT_COLUMNS, { count: 'exact' })
       .eq('authority_id', parsed.data)
       .order('created_at', { ascending: false })
       .limit(25)

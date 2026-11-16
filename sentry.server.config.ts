@@ -1,4 +1,5 @@
 import * as Sentry from '@sentry/nextjs';
+import { scrubBreadcrumb, scrubEvent } from './src/lib/sentry-scrub';
 
 const dsn = process.env.NEXT_PUBLIC_SENTRY_DSN;
 
@@ -8,15 +9,15 @@ if (dsn) {
     tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
     sendDefaultPii: false,
     environment: process.env.NODE_ENV,
-    // Strip sensitive headers
+    // Strip query strings, cookies, auth headers and request bodies
     beforeSend(event) {
-      if (event.request?.headers) {
-        const h = event.request.headers as Record<string, string>;
-        delete h.cookie;
-        delete h.authorization;
-        delete h['x-forwarded-for'];
-      }
-      return event;
+      return scrubEvent(event);
+    },
+    beforeSendTransaction(event) {
+      return scrubEvent(event);
+    },
+    beforeBreadcrumb(crumb) {
+      return scrubBreadcrumb(crumb);
     },
   });
 }

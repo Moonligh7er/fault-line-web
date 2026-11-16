@@ -5,6 +5,7 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { getCategoryInfo, HAZARD_LEVELS } from '@/lib/categories';
 import { env } from '@/lib/env';
 import type { ReportRow } from '@/lib/types';
+import { REPORT_COLUMNS } from '@/lib/report-columns';
 import { isLetterSupported } from '@/lib/legal';
 import VoteButtons from './vote-buttons';
 import ShareButton from '@/components/ShareButton';
@@ -43,7 +44,7 @@ export default async function ReportDetailPage({ params }: PageProps) {
   const supabase = await createSupabaseServerClient();
   const { data: report, error } = await supabase
     .from('reports')
-    .select('*')
+    .select(REPORT_COLUMNS)
     .eq('id', parsed.data)
     .maybeSingle<ReportRow>();
 

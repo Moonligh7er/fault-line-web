@@ -6,6 +6,11 @@ type CookieToSet = { name: string; value: string; options?: CookieOptions };
 
 const PROTECTED_PATHS = ['/dashboard', '/profile', '/submit'];
 const MUTATION_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
+const MACHINE_PREFIXES = ['/api/webhooks/', '/api/cron/', '/api/v1/', '/open311/'];
+
+function isMachinePath(pathname: string): boolean {
+  return MACHINE_PREFIXES.some((p) => pathname.startsWith(p));
+}
 
 export async function middleware(request: NextRequest) {
   const url = request.nextUrl;
@@ -13,21 +18,24 @@ export async function middleware(request: NextRequest) {
   const nonce = generateNonce();
 
   // --- CSRF / origin check on mutating requests ---
-  if (MUTATION_METHODS.has(request.method)) {
+  // Fails closed: a browser always sends Origin on POST/PUT/PATCH/DELETE, so a
+  // missing or foreign Origin is refused. Machine-to-machine endpoints that
+  // authenticate by signature or secret (webhooks, cron, keyed API, Open311)
+  // are exempt.
+  if (MUTATION_METHODS.has(request.method) && !isMachinePath(url.pathname)) {
     const origin = request.headers.get('origin');
     const host = request.headers.get('host');
     const expected = process.env.NEXT_PUBLIC_APP_ORIGIN;
-    if (origin && expected) {
+    let allowed = false;
+    if (origin) {
       try {
-        const originUrl = new URL(origin);
-        const expectedUrl = new URL(expected);
-        if (originUrl.host !== expectedUrl.host && originUrl.host !== host) {
-          return new NextResponse('Forbidden', { status: 403 });
-        }
+        const originHost = new URL(origin).host;
+        allowed = (!!expected && originHost === new URL(expected).host) || originHost === host;
       } catch {
-        return new NextResponse('Forbidden', { status: 403 });
+        allowed = false;
       }
     }
+    if (!allowed) return new NextResponse('Forbidden', { status: 403 });
   }
 
   // Build headers with nonce so server components can read it

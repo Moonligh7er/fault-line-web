@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { userError } from '@/lib/errors';
 
 type Result = { ok: true } | { ok: false; error: string };
 
@@ -15,7 +16,7 @@ export async function reviewOutbound(id: string, approve: boolean, note?: string
     p_approve: approve,
     p_note: note?.trim() || null,
   });
-  if (error) return { ok: false, error: error.message };
+  if (error) return { ok: false, error: userError('admin.queue', error, 'Could not save. Please try again.') };
   revalidatePath('/admin/queue');
   return { ok: true };
 }
@@ -23,7 +24,7 @@ export async function reviewOutbound(id: string, approve: boolean, note?: string
 export async function setAutoSend(enabled: boolean): Promise<Result> {
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase.rpc('set_setting', { p_key: 'auto_send', p_value: enabled });
-  if (error) return { ok: false, error: error.message };
+  if (error) return { ok: false, error: userError('admin.queue', error, 'Could not save. Please try again.') };
   revalidatePath('/admin/queue');
   return { ok: true };
 }
@@ -36,7 +37,7 @@ export async function setAutoSend(enabled: boolean): Promise<Result> {
 export async function setSandboxMode(enabled: boolean): Promise<Result> {
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase.rpc('set_setting', { p_key: 'sandbox_mode', p_value: enabled });
-  if (error) return { ok: false, error: error.message };
+  if (error) return { ok: false, error: userError('admin.queue', error, 'Could not save. Please try again.') };
   revalidatePath('/admin/queue');
   return { ok: true };
 }
@@ -45,7 +46,7 @@ export async function setSandboxMode(enabled: boolean): Promise<Result> {
 export async function markSubmitted(logId: string, newStatus: 'sent' | 'failed'): Promise<Result> {
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase.rpc('mark_escalation_handled', { p_log_id: logId, p_status: newStatus });
-  if (error) return { ok: false, error: error.message };
+  if (error) return { ok: false, error: userError('admin.queue', error, 'Could not save. Please try again.') };
   revalidatePath('/admin/queue');
   return { ok: true };
 }
@@ -57,7 +58,7 @@ export async function reviewInbound(
 ): Promise<Result> {
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase.rpc('review_inbound', { p_id: id, p_apply: apply, p_status: status ?? null });
-  if (error) return { ok: false, error: error.message };
+  if (error) return { ok: false, error: userError('admin.queue', error, 'Could not save. Please try again.') };
   revalidatePath('/admin/queue');
   return { ok: true };
 }
@@ -65,7 +66,7 @@ export async function reviewInbound(
 export async function setAutoApplyReplies(enabled: boolean): Promise<Result> {
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase.rpc('set_setting', { p_key: 'auto_apply_replies', p_value: enabled });
-  if (error) return { ok: false, error: error.message };
+  if (error) return { ok: false, error: userError('admin.queue', error, 'Could not save. Please try again.') };
   revalidatePath('/admin/queue');
   return { ok: true };
 }
@@ -76,7 +77,7 @@ export async function setReplyTo(address: string): Promise<Result> {
   if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return { ok: false, error: 'Not an email address' };
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase.rpc('set_setting', { p_key: 'reply_to', p_value: value || null });
-  if (error) return { ok: false, error: error.message };
+  if (error) return { ok: false, error: userError('admin.queue', error, 'Could not save. Please try again.') };
   revalidatePath('/admin/queue');
   return { ok: true };
 }

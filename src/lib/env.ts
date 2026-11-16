@@ -23,6 +23,11 @@ const serverSchema = z.object({
   SENTRY_AUTH_TOKEN: z.string().optional(),
   CRON_SECRET: z.string().min(16).optional(),
   KOKORO_TTS_URL: z.string().url().optional(),
+  // City billing (Stripe Invoicing); unset = billing off.
+  STRIPE_SECRET_KEY: z.string().trim().min(1).optional(),
+  STRIPE_WEBHOOK_SECRET: z.string().trim().min(1).optional(),
+  // Resend delivery/bounce webhook (Svix signing secret, whsec_...).
+  RESEND_WEBHOOK_SECRET: z.string().trim().min(1).optional(),
 });
 
 const clientSchema = z.object({
@@ -39,17 +44,22 @@ type Env = z.infer<typeof clientSchema> & Partial<z.infer<typeof serverSchema>>;
 
 let cached: Env | undefined;
 
+// A blank line in an env file (`NAME=`) means unset, not an empty value.
+function blanksUnset(src: Record<string, string | undefined>): Record<string, string | undefined> {
+  return Object.fromEntries(Object.entries(src).filter(([, v]) => v !== ''));
+}
+
 function parseEnv(): Env {
-  const clientEnv = clientSchema.parse({
+  const clientEnv = clientSchema.parse(blanksUnset({
     NEXT_PUBLIC_APP_ORIGIN: process.env.NEXT_PUBLIC_APP_ORIGIN,
     NEXT_PUBLIC_SITE_NAME: process.env.NEXT_PUBLIC_SITE_NAME,
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
     NEXT_PUBLIC_GA_MEASUREMENT_ID: process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID,
-  });
+  }));
   const serverEnv =
-    typeof window === 'undefined' ? serverSchema.parse(process.env) : {};
+    typeof window === 'undefined' ? serverSchema.parse(blanksUnset(process.env)) : {};
   return { ...clientEnv, ...serverEnv };
 }
 

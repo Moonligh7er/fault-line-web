@@ -36,7 +36,10 @@ export default async function CityDashboard({ params }: { params: Promise<{ id: 
 
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase.rpc('city_dashboard', { p_city: id });
-  if (error || !data) return <p role="alert">Could not load the dashboard: {error?.message}</p>;
+  if (error || !data) {
+    if (error) console.error('[portal] city_dashboard', error);
+    return <p role="alert">Could not load the dashboard. Please try again later.</p>;
+  }
   const d = data as CityDashboardData;
   const resolvedPct = d.totals.all ? Math.round((d.totals.resolved / d.totals.all) * 100) : null;
 

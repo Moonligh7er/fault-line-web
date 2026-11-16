@@ -1,6 +1,6 @@
 import type { NextRequest } from 'next/server';
 import {
-  REPORT_COLUMNS,
+  OPEN311_REPORT_COLUMNS,
   agencyNames,
   isUuid,
   open311Error,
@@ -22,7 +22,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const supabase = publicClient();
   const { data } = await supabase
     .from('reports')
-    .select(REPORT_COLUMNS)
+    .select(OPEN311_REPORT_COLUMNS)
     .eq('id', id)
     .neq('status', 'draft')
     .maybeSingle();

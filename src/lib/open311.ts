@@ -20,8 +20,7 @@ export const OPEN311_DEFAULT_WINDOW_DAYS = 90;
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const CLOSED_STATUSES = new Set(['resolved', 'closed', 'rejected']);
 
-export const REPORT_COLUMNS =
-  'id, category, latitude, longitude, address, zip, description, hazard_level, media, status, authority_id, created_at, updated_at, resolved_at';
+export { OPEN311_REPORT_COLUMNS } from './report-columns';
 
 export type PublicReport = Pick<
   ReportRow,

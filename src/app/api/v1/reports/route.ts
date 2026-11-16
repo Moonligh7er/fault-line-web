@@ -2,13 +2,12 @@ import type { NextRequest } from 'next/server';
 import { apiError, apiJson, apiOptions, authenticate, dateParam, page, paging } from '@/lib/api-v1';
 import { publicClient } from '@/lib/open311';
 import { isUuid } from '@/lib/open311';
+import { API_V1_REPORT_COLUMNS } from '@/lib/report-columns';
 
 // GET /api/v1/reports — Fault Line-originated reports, newest first.
 //   ?since=ISO ?until=ISO ?status= ?category= ?authority_id=uuid ?state=MA ?cluster_id=uuid
 //   ?limit (≤500) ?offset
 // Never includes user ids or device-local media paths.
-const COLUMNS =
-  'id, category, latitude, longitude, address, city, state, zip, description, size_rating, hazard_level, urgency, condition_level, media, status, authority_id, submission_reference, upvote_count, confirm_count, is_anonymous, sensor_detected, is_quick_report, created_at, updated_at, resolved_at';
 
 export async function GET(req: NextRequest) {
   const auth = await authenticate(req);
@@ -22,7 +21,7 @@ export async function GET(req: NextRequest) {
 
   let q = publicClient()
     .from('reports')
-    .select(COLUMNS)
+    .select(API_V1_REPORT_COLUMNS)
     .neq('status', 'draft')
     .order('created_at', { ascending: false })
     .range(offset, offset + limit - 1);

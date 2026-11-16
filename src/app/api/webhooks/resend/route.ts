@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { dbRateLimitHit } from '@/lib/rate-limit';
 
 // Resend webhook handler.
 //
@@ -11,9 +12,13 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 //
 // On arrival, every event is signed with HMAC SHA-256 using the Svix
 // convention (Resend uses Svix under the hood). We verify the signature
-// before doing any DB writes.
+// before doing any DB writes, refuse timestamps more than 5 minutes off
+// (replays), and process each svix-id once (Resend retries redeliver it).
 
 export const runtime = 'nodejs';
+
+const TIMESTAMP_TOLERANCE_S = 300;
+const DEDUPE_WINDOW_S = 86_400;
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -53,6 +58,13 @@ export async function POST(req: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
+
+  // First delivery of this svix-id records it; any later one is a no-op.
+  const firstSeen = await dbRateLimitHit('resend_webhook_id', req.headers.get('svix-id')!, 1, DEDUPE_WINDOW_S);
+  if (firstSeen === null) {
+    return NextResponse.json({ error: 'Temporarily unavailable' }, { status: 503 });
+  }
+  if (!firstSeen) return NextResponse.json({ received: true, duplicate: true });
 
   const messageId = event.data.email_id;
   if (!messageId) {
@@ -161,6 +173,10 @@ async function verifySignature(req: NextRequest, rawBody: string): Promise<boole
   const svixSignature = req.headers.get('svix-signature');
 
   if (!svixId || !svixTimestamp || !svixSignature) return false;
+
+  // Replay window: svix-timestamp is Unix seconds.
+  if (!/^\d{1,12}$/.test(svixTimestamp)) return false;
+  if (Math.abs(Date.now() / 1000 - Number(svixTimestamp)) > TIMESTAMP_TOLERANCE_S) return false;
 
   // Svix secret format: "whsec_<base64>" — strip prefix.
   const secret = WEBHOOK_SECRET.startsWith('whsec_')

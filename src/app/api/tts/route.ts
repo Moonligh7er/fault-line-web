@@ -4,11 +4,11 @@ import { checkRateLimit, getRateLimitKey } from '@/lib/rate-limit';
 // Proxy to the shared Kokoro TTS server. Avoids exposing the upstream URL
 // to browser clients and centralizes voice/speed validation. Modal scales
 // to zero when idle, so the first request after a quiet period takes
-// 10–15 s; subsequent requests are sub-second.
+// 10–15 s; subsequent requests are sub-second. The upstream URL comes only
+// from KOKORO_TTS_URL; without it read-aloud is off and the client falls
+// back to the browser's own speech.
 
-const KOKORO_ENDPOINT =
-  process.env.KOKORO_TTS_URL ??
-  'https://moons7onr--kokoro-tts-server-kokorotts-tts.modal.run';
+const KOKORO_ENDPOINT = process.env.KOKORO_TTS_URL?.trim() || null;
 
 const ALLOWED_VOICES = new Set([
   'af_bella',
@@ -28,6 +28,9 @@ const REQUEST_TIMEOUT_MS = 25_000;
 export const runtime = 'nodejs';
 
 export async function POST(req: NextRequest) {
+  if (!KOKORO_ENDPOINT) {
+    return NextResponse.json({ error: 'Read-aloud is not available.' }, { status: 503 });
+  }
   const perVisitor = await checkRateLimit('tts', getRateLimitKey(null, req.headers));
   if (!perVisitor.success) {
     return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
@@ -71,10 +74,8 @@ export async function POST(req: NextRequest) {
     });
 
     if (!upstream.ok) {
-      return NextResponse.json(
-        { error: `Upstream TTS error: ${upstream.status}` },
-        { status: 502 },
-      );
+      console.error('[tts] upstream status', upstream.status);
+      return NextResponse.json({ error: 'Read-aloud failed. Try again.' }, { status: 502 });
     }
 
     const audio = await upstream.arrayBuffer();
@@ -87,10 +88,10 @@ export async function POST(req: NextRequest) {
       },
     });
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Unknown TTS error';
     const isTimeout = (err as Error)?.name === 'AbortError';
+    if (!isTimeout) console.error('[tts] upstream request failed', err);
     return NextResponse.json(
-      { error: isTimeout ? 'TTS request timed out' : message },
+      { error: isTimeout ? 'Read-aloud timed out. Try again.' : 'Read-aloud failed. Try again.' },
       { status: isTimeout ? 504 : 502 },
     );
   } finally {
@@ -100,6 +101,7 @@ export async function POST(req: NextRequest) {
 
 // Lightweight GET — proxy the Kokoro health endpoint.
 export async function GET() {
+  if (!KOKORO_ENDPOINT) return NextResponse.json({ ok: false }, { status: 503 });
   try {
     const ctrl = new AbortController();
     const t = setTimeout(() => ctrl.abort(), 5000);

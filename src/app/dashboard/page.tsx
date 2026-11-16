@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { getCategoryInfo } from '@/lib/categories';
 import type { ReportRow } from '@/lib/types';
+import { REPORT_COLUMNS } from '@/lib/report-columns';
 import RecentReportsLive from './recent-reports-live';
 
 export const metadata = { title: 'Dashboard' };
@@ -22,18 +23,18 @@ export default async function DashboardPage() {
     await Promise.all([
       supabase
         .from('reports')
-        .select('*')
+        .select(REPORT_COLUMNS)
         .order('created_at', { ascending: false })
         .limit(20)
         .returns<ReportRow[]>(),
-      supabase.from('reports').select('*', { count: 'exact', head: true }),
+      supabase.from('reports').select('id', { count: 'exact', head: true }),
       supabase
         .from('reports')
-        .select('*', { count: 'exact', head: true })
+        .select('id', { count: 'exact', head: true })
         .in('status', ['submitted', 'acknowledged', 'in_progress']),
       supabase
         .from('reports')
-        .select('*', { count: 'exact', head: true })
+        .select('id', { count: 'exact', head: true })
         .eq('status', 'resolved'),
     ]);
 

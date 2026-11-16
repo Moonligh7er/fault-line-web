@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { z } from 'zod';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import type { ReportRow, AuthorityRow } from '@/lib/types';
+import { REPORT_COLUMNS } from '@/lib/report-columns';
 import { generateClaimEvidence } from '@/lib/insurance';
 import ClaimView from './claim-view';
 
@@ -27,7 +28,7 @@ export default async function InsurancePage({ params }: PageProps) {
 
   const { data: report } = await supabase
     .from('reports')
-    .select('*')
+    .select(REPORT_COLUMNS)
     .eq('id', parsed.data)
     .maybeSingle<ReportRow>();
   if (!report) notFound();

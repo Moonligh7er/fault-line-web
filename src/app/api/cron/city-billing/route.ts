@@ -44,8 +44,9 @@ export async function GET(req: NextRequest) {
         await startCitySubscription(admin, city);
         out.started++;
       } catch (e) {
-        out.errors.push(`${city.slug}: ${String(e)}`);
-        await logCityEvent(admin, city.id, 'subscribe_failed', { error: String(e) }, `subfail:${now.slice(0, 10)}`);
+        console.error('[cron/city-billing] subscription start failed', city.slug, e);
+        out.errors.push(city.slug);
+        await logCityEvent(admin, city.id, 'subscribe_failed', { error: 'billing provider error (see server logs)' }, `subfail:${now.slice(0, 10)}`);
       }
     } else {
       await admin.from('city_accounts').update({ status: 'ended' }).eq('id', city.id).eq('status', 'pilot');

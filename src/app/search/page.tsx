@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { CATEGORIES, getCategoryInfo } from '@/lib/categories';
 import type { ReportRow } from '@/lib/types';
+import { REPORT_COLUMNS } from '@/lib/report-columns';
 
 export const metadata = {
   title: 'Search reports',
@@ -26,6 +27,20 @@ const ALLOWED_STATUSES = new Set([
 ]);
 const CATEGORY_SET = new Set(CATEGORIES.map((c) => c.key));
 
+// The keyword goes into a PostgREST .or() filter, where commas, parentheses
+// and quotes are syntax. Keep only letters, numbers, spaces, hyphens,
+// apostrophes and periods; at most 100 characters.
+function keyword(value: string | undefined): string | undefined {
+  if (!value) return undefined;
+  const cleaned = value
+    .replace(/[^\p{L}\p{N} '.-]/gu, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 100)
+    .trim();
+  return cleaned.length > 0 ? cleaned : undefined;
+}
+
 function safe(value: string | undefined, max = 100): string | undefined {
   if (!value) return undefined;
   const trimmed = value.trim().slice(0, max);
@@ -38,7 +53,7 @@ export default async function SearchPage({
   searchParams: Promise<SearchParams>;
 }) {
   const params = await searchParams;
-  const q = safe(params.q);
+  const q = keyword(params.q);
   const rawCategory = safe(params.category);
   const rawState = safe(params.state, 2);
   const rawCity = safe(params.city);
@@ -55,7 +70,7 @@ export default async function SearchPage({
   const supabase = await createSupabaseServerClient();
   let query = supabase
     .from('reports')
-    .select('*', { count: 'exact' })
+    .select(REPORT_COLUMNS, { count: 'exact' })
     .order('created_at', { ascending: false })
     .limit(50);
 
@@ -64,11 +79,8 @@ export default async function SearchPage({
   if (state) query = query.eq('state', state);
   if (rawCity) query = query.ilike('city', `%${rawCity.replace(/[%_]/g, '\\$&')}%`);
   if (q) {
-    // Escape LIKE special chars to prevent injection in ilike pattern
-    const safePattern = q.replace(/[%_]/g, '\\$&');
-    query = query.or(
-      `description.ilike.%${safePattern}%,address.ilike.%${safePattern}%`
-    );
+    // keyword() already removed %, _ and every .or() delimiter.
+    query = query.or(`description.ilike.%${q}%,address.ilike.%${q}%`);
   }
 
   const { data: reports, count } = await query.returns<ReportRow[]>();

@@ -5,6 +5,7 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { magicLinkSchema } from '@/lib/zod-schemas';
 import { checkRateLimit, getRateLimitKey } from '@/lib/rate-limit';
 import { env } from '@/lib/env';
+import { safeNextPath } from '@/lib/safe-redirect';
 
 interface ActionResult {
   ok: boolean;
@@ -29,11 +30,8 @@ export async function sendMagicLink(input: {
     };
   }
 
-  // Validate `next` is a same-origin relative path (open-redirect guard)
-  let nextPath = '/';
-  if (typeof input.next === 'string' && input.next.startsWith('/') && !input.next.startsWith('//')) {
-    nextPath = input.next;
-  }
+  // Open-redirect guard: same-origin path + query only
+  const nextPath = safeNextPath(input.next, env.NEXT_PUBLIC_APP_ORIGIN);
 
   const supabase = await createSupabaseServerClient();
   const redirectTo = `${env.NEXT_PUBLIC_APP_ORIGIN}/auth/callback?next=${encodeURIComponent(nextPath)}`;

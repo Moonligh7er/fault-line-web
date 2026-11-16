@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 import { getCategoryInfo } from '@/lib/categories';
 import type { ReportRow } from '@/lib/types';
+import { withoutUserId } from '@/lib/report-columns';
 
 interface Props {
   initial: ReportRow[];
@@ -21,7 +22,7 @@ export default function RecentReportsLive({ initial }: Props) {
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'reports' },
         (payload) => {
-          const r = payload.new as ReportRow;
+          const r = withoutUserId(payload.new) as ReportRow;
           setReports((prev) => {
             if (prev.some((p) => p.id === r.id)) return prev;
             return [r, ...prev].slice(0, 10);
@@ -32,7 +33,7 @@ export default function RecentReportsLive({ initial }: Props) {
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'reports' },
         (payload) => {
-          const r = payload.new as ReportRow;
+          const r = withoutUserId(payload.new) as ReportRow;
           setReports((prev) => prev.map((p) => (p.id === r.id ? r : p)));
         }
       )

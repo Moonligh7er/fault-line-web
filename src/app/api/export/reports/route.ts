@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { checkRateLimit, getRateLimitKey } from '@/lib/rate-limit';
 import type { ReportRow } from '@/lib/types';
+import { EXPORT_REPORT_COLUMNS } from '@/lib/report-columns';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -33,9 +34,7 @@ export async function GET(request: NextRequest) {
 
   let query = supabase
     .from('reports')
-    .select(
-      'id,category,state,city,latitude,longitude,size_rating,hazard_level,status,upvote_count,confirm_count,created_at,resolved_at'
-    )
+    .select(EXPORT_REPORT_COLUMNS)
     .order('created_at', { ascending: false })
     .limit(1000);
 

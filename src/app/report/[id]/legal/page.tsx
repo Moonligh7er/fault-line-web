@@ -3,6 +3,7 @@ import { z } from 'zod';
 import Link from 'next/link';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import type { ReportRow, AuthorityRow } from '@/lib/types';
+import { REPORT_COLUMNS } from '@/lib/report-columns';
 import { generateDemandLetter } from '@/lib/legal';
 import LegalLetterView from './letter-view';
 
@@ -27,7 +28,7 @@ export default async function LegalLetterPage({ params }: PageProps) {
 
   const { data: report } = await supabase
     .from('reports')
-    .select('*')
+    .select(REPORT_COLUMNS)
     .eq('id', parsed.data)
     .maybeSingle<ReportRow>();
   if (!report) notFound();

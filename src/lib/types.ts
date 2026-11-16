@@ -51,9 +51,10 @@ export interface MediaItem {
   thumbnailUrl?: string;
 }
 
+// No user_id: it isn't readable by clients (column grant). Select reports
+// with REPORT_COLUMNS from ./report-columns.
 export interface ReportRow {
   id: string;
-  user_id: string | null;
   category: ReportCategory;
   latitude: number;
   longitude: number;
@@ -95,6 +96,10 @@ export interface AuthorityRow {
   created_at: string;
   updated_at: string;
 }
+
+/** Every client-readable profiles column (push_token is hidden; '*' fails). */
+export const PROFILE_COLUMNS =
+  'id, display_name, avatar_url, total_reports, total_upvotes, total_confirms, points, badges, created_at, updated_at';
 
 export interface ProfileRow {
   id: string;

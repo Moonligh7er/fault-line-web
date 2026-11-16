@@ -24,7 +24,7 @@ const q = (name: string, description: string, schema: Record<string, unknown> = 
 
 const paging = [
   q('limit', 'Page size (1–500, default 100)', { type: 'integer' }),
-  q('offset', 'Rows to skip', { type: 'integer' }),
+  q('offset', 'Rows to skip (0–10000; page further with since)', { type: 'integer' }),
 ];
 
 const errors = {
@@ -42,7 +42,7 @@ export function GET() {
       description:
         'Read access to Fault Line community infrastructure reports. Keys are issued by Fault Line admins. ' +
         'Scopes: read:public (reports, clusters, authorities, escalation record) and read:internal ' +
-        '(adds outbound queue, inbound replies, and escalation message bodies). ' +
+        '(adds outbound queue, inbound replies, and escalation recipients, subjects and bodies). ' +
         'Public no-key feed: /open311/v2/requests.json (Open311 GeoReport v2).',
     },
     servers: [{ url: `${env.NEXT_PUBLIC_APP_ORIGIN}/api/v1` }],
@@ -89,7 +89,7 @@ export function GET() {
           },
         },
         Authority: { type: 'object', properties: { id: { type: 'string' }, name: { type: 'string' }, level: { type: 'string' }, state: { type: 'string' }, city: { type: ['string', 'null'] } } },
-        Escalation: { type: 'object', properties: { id: { type: 'string' }, cluster_id: { type: 'string' }, method: { type: 'string' }, recipient: { type: 'string' }, subject: { type: 'string' }, status: { type: 'string' }, sent_at: { type: 'string' } } },
+        Escalation: { type: 'object', properties: { id: { type: 'string' }, cluster_id: { type: 'string' }, method: { type: 'string' }, status: { type: 'string' }, sent_at: { type: 'string' }, recipient: { type: 'string', description: 'read:internal only' }, subject: { type: 'string', description: 'read:internal only' }, body: { type: 'string', description: 'read:internal only' } } },
       },
     },
     paths: {
@@ -125,7 +125,7 @@ export function GET() {
       },
       '/escalations': {
         get: {
-          summary: 'Notices sent to authorities (bodies need read:internal)',
+          summary: 'Notices sent to authorities (recipient, subject and body need read:internal)',
           parameters: [q('cluster_id', 'Cluster UUID'), q('authority_id', 'Authority UUID'), q('since', 'sent_at on/after (ISO 8601)'), ...paging],
           responses: { '200': { description: 'Page of escalations', content: { 'application/json': { schema: list('#/components/schemas/Escalation') } } }, ...errors },
         },

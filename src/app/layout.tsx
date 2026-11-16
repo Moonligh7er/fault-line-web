@@ -1,11 +1,11 @@
 import type { Metadata, Viewport } from 'next';
 import { headers } from 'next/headers';
-import Script from 'next/script';
 import Link from 'next/link';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { isAdmin as checkAdmin } from '@/lib/admin';
 import './globals.css';
 import BetaBadge from '@/components/BetaBadge';
+import Analytics from '@/components/Analytics';
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_ORIGIN ?? 'http://localhost:3000'),
@@ -128,21 +128,8 @@ export default async function RootLayout({
             &copy; 2025&ndash;{new Date().getFullYear()} Moonlit Social Labs · Fault Line is a product of Moonlit Social Labs
           </p>
         </footer>
-        {gaId && (
-          <>
-            <Script
-              src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
-              strategy="afterInteractive"
-              nonce={nonce}
-            />
-            <Script id="ga-init" strategy="afterInteractive" nonce={nonce}>
-              {`window.dataLayer = window.dataLayer || [];
-function gtag(){dataLayer.push(arguments);}
-gtag('js', new Date());
-gtag('config', '${gaId}', { anonymize_ip: true });`}
-            </Script>
-          </>
-        )}
+        {/* GA stays off admin, portal, profile, dashboard, sign-in and report legal/insurance pages. */}
+        {gaId && <Analytics gaId={gaId} nonce={nonce} />}
       </body>
     </html>
   );

@@ -1,16 +1,14 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { safeNextPath } from '@/lib/safe-redirect';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   const url = new URL(request.url);
   const code = url.searchParams.get('code');
-  const nextRaw = url.searchParams.get('next') ?? '/';
-
-  // Open-redirect guard: only allow relative, same-origin paths
-  const next =
-    nextRaw.startsWith('/') && !nextRaw.startsWith('//') ? nextRaw : '/';
+  // Open-redirect guard: same-origin path + query only
+  const next = safeNextPath(url.searchParams.get('next'), url.origin);
 
   if (!code) {
     return NextResponse.redirect(new URL('/login?error=missing_code', request.url));
@@ -23,5 +21,5 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL('/login?error=exchange_failed', request.url));
   }
 
-  return NextResponse.redirect(new URL(next, request.url));
+  return NextResponse.redirect(new URL(next, url.origin));
 }

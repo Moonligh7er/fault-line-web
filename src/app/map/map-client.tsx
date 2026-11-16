@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import type { ReportRow } from '@/lib/types';
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
+import { withoutUserId } from '@/lib/report-columns';
 
 const LeafletMap = dynamic(() => import('@/components/LeafletMap'), {
   ssr: false,
@@ -60,7 +61,7 @@ export default function MapClient({
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'reports' },
         (payload) => {
-          const r = payload.new as ReportRow;
+          const r = withoutUserId(payload.new) as ReportRow;
           // Only show reports within the visible radius
           const dist = kmBetween(
             initialCenter[0],
@@ -80,7 +81,7 @@ export default function MapClient({
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'reports' },
         (payload) => {
-          const r = payload.new as ReportRow;
+          const r = withoutUserId(payload.new) as ReportRow;
           setReports((prev) => prev.map((p) => (p.id === r.id ? r : p)));
         }
       )

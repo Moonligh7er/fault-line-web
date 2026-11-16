@@ -61,11 +61,7 @@ export async function submitVote(input: {
     return { ok: false, message: 'Could not record vote.' };
   }
 
-  // Increment counter via guarded RPC (migration 007)
-  const rpcName =
-    parsed.data.voteType === 'upvote' ? 'increment_upvote' : 'increment_confirm';
-  await supabase.rpc(rpcName, { report_id: parsed.data.reportId });
-
+  // Counts are kept by a trigger on report_votes (migration 041).
   revalidatePath(`/report/${parsed.data.reportId}`);
   return {
     ok: true,

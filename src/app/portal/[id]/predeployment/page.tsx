@@ -27,7 +27,10 @@ export default async function PredeploymentPage({ params }: { params: Promise<{ 
 
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase.rpc('city_predeployment', { p_city: id });
-  if (error) return <p role="alert">Could not load the report: {error.message}</p>;
+  if (error) {
+    console.error('[portal] city_predeployment', error);
+    return <p role="alert">Could not load the report. Please try again later.</p>;
+  }
   const rows = (data ?? []) as Prediction[];
 
   return (

@@ -1,3 +1,7 @@
+// Our Supabase project only (REST, storage, realtime), never *.supabase.co.
+export const SUPABASE_ORIGIN = 'https://dzewklljiksyivsfpunt.supabase.co';
+const SUPABASE_WS_ORIGIN = 'wss://dzewklljiksyivsfpunt.supabase.co';
+
 export function generateNonce(): string {
   const bytes = new Uint8Array(16);
   crypto.getRandomValues(bytes);
@@ -37,8 +41,8 @@ export function buildCsp({ nonce, isDev, embeddable = false }: BuildCspOptions):
 
   const connectSrc = [
     "'self'",
-    'https://*.supabase.co',
-    'wss://*.supabase.co',
+    SUPABASE_ORIGIN,
+    SUPABASE_WS_ORIGIN,
     'https://www.google-analytics.com',
     'https://analytics.google.com',
     // Formspree — feedback/feature-request/bug-report submissions
@@ -54,10 +58,10 @@ export function buildCsp({ nonce, isDev, embeddable = false }: BuildCspOptions):
     `script-src ${scriptSrc.join(' ')}`,
     `script-src-elem ${scriptSrc.join(' ')}`,
     `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com`,
-    `img-src 'self' data: blob: https://*.supabase.co https://tile.openstreetmap.org https://unpkg.com`,
+    `img-src 'self' data: blob: ${SUPABASE_ORIGIN} https://tile.openstreetmap.org https://unpkg.com`,
     `font-src 'self' data: https://fonts.gstatic.com`,
     `connect-src ${connectSrc.join(' ')}`,
-    `media-src 'self' blob: https://*.supabase.co`,
+    `media-src 'self' blob: ${SUPABASE_ORIGIN}`,
     `object-src 'none'`,
     `base-uri 'self'`,
     `form-action 'self'`,

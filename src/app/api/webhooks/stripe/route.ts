@@ -14,6 +14,9 @@ export const runtime = 'nodejs';
  *   subscription canceled / ended  → ended
  *   invoice.overdue                → suspended
  *   invoice.paid                   → active again if it was suspended
+ * Events can arrive out of order or late, so subscription and invoice events
+ * re-fetch the subscription (and invoice) from Stripe and act on its state
+ * now, never on the snapshot in the event.
  */
 export async function POST(req: NextRequest) {
   const s = stripe();
@@ -37,7 +40,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    await handle(event, admin);
+    await handle(event, admin, s);
   } catch (e) {
     // Let Stripe retry: forget the event so the retry is processed.
     await admin.from('stripe_events').delete().eq('id', event.id);
@@ -48,24 +51,34 @@ export async function POST(req: NextRequest) {
 }
 
 type Admin = ReturnType<typeof createSupabaseServiceClient>;
+type CityRow = { id: string; status: string; stripe_subscription_id: string | null };
 
 async function cityFor(admin: Admin, opts: { cityId?: string | null; subscription?: string | null; customer?: string | null }) {
+  const cols = 'id, status, stripe_subscription_id';
   if (opts.cityId) {
-    const { data } = await admin.from('city_accounts').select('id, status').eq('id', opts.cityId).maybeSingle();
-    if (data) return data as { id: string; status: string };
+    const { data } = await admin.from('city_accounts').select(cols).eq('id', opts.cityId).maybeSingle();
+    if (data) return data as CityRow;
   }
   if (opts.subscription) {
-    const { data } = await admin.from('city_accounts').select('id, status').eq('stripe_subscription_id', opts.subscription).maybeSingle();
-    if (data) return data as { id: string; status: string };
+    const { data } = await admin.from('city_accounts').select(cols).eq('stripe_subscription_id', opts.subscription).maybeSingle();
+    if (data) return data as CityRow;
   }
   if (opts.customer) {
-    const { data } = await admin.from('city_accounts').select('id, status').eq('stripe_customer_id', opts.customer).maybeSingle();
-    if (data) return data as { id: string; status: string };
+    const { data } = await admin.from('city_accounts').select(cols).eq('stripe_customer_id', opts.customer).maybeSingle();
+    if (data) return data as CityRow;
   }
   return null;
 }
 
 const idOf = (x: string | { id: string } | null | undefined) => (typeof x === 'string' ? x : x?.id ?? null);
+
+/** City status implied by a subscription's current Stripe status (null = leave as is). */
+function statusFor(sub: Stripe.Subscription): 'active' | 'suspended' | 'ended' | null {
+  if (sub.status === 'active' || sub.status === 'trialing') return 'active';
+  if (sub.status === 'past_due' || sub.status === 'unpaid') return 'suspended';
+  if (sub.status === 'canceled' || sub.status === 'incomplete_expired') return 'ended';
+  return null;
+}
 
 async function setStatus(admin: Admin, city: { id: string; status: string }, status: 'active' | 'suspended' | 'ended', eventId: string, extra: Record<string, unknown> = {}) {
   if (city.status === status && Object.keys(extra).length === 0) return;
@@ -87,36 +100,34 @@ async function setStatus(admin: Admin, city: { id: string; status: string }, sta
   }
 }
 
-async function handle(event: Stripe.Event, admin: Admin) {
+async function handle(event: Stripe.Event, admin: Admin, s: Stripe) {
   switch (event.type) {
     case 'customer.subscription.created':
     case 'customer.subscription.updated':
     case 'customer.subscription.deleted': {
-      const sub = event.data.object as Stripe.Subscription;
+      const sub = await s.subscriptions.retrieve((event.data.object as Stripe.Subscription).id);
       const city = await cityFor(admin, { cityId: sub.metadata?.city_account_id, subscription: sub.id, customer: idOf(sub.customer) });
       if (!city) return;
+      // A late event about a subscription the city has since replaced.
+      if (city.stripe_subscription_id && city.stripe_subscription_id !== sub.id) return;
       const periodEnd = sub.items.data[0]?.current_period_end;
       const extra = {
         stripe_subscription_id: sub.status === 'canceled' ? null : sub.id,
         current_period_end: periodEnd ? new Date(periodEnd * 1000).toISOString() : null,
       };
-      const status =
-        sub.status === 'active' || sub.status === 'trialing'
-          ? 'active'
-          : sub.status === 'past_due' || sub.status === 'unpaid'
-            ? 'suspended'
-            : sub.status === 'canceled' || sub.status === 'incomplete_expired'
-              ? 'ended'
-              : null;
+      const status = statusFor(sub);
       if (status) await setStatus(admin, city, status, event.id, extra);
       else await admin.from('city_accounts').update(extra).eq('id', city.id);
       return;
     }
     case 'invoice.overdue':
     case 'invoice.payment_failed': {
-      const inv = event.data.object as Stripe.Invoice;
+      const inv = await s.invoices.retrieve((event.data.object as Stripe.Invoice).id);
+      if (inv.status !== 'open') return; // paid, voided or written off since
       if (event.type === 'invoice.payment_failed' && inv.due_date && inv.due_date * 1000 > Date.now()) return; // not due yet
       const subId = idOf(inv.parent?.subscription_details?.subscription ?? null);
+      const sub = subId ? await s.subscriptions.retrieve(subId) : null;
+      if (sub && statusFor(sub) === 'ended') return; // the subscription event ends access
       const city = await cityFor(admin, { subscription: subId, customer: idOf(inv.customer) });
       if (city && city.status === 'active') await setStatus(admin, city, 'suspended', event.id);
       return;
@@ -124,10 +135,13 @@ async function handle(event: Stripe.Event, admin: Admin) {
     case 'invoice.paid': {
       const inv = event.data.object as Stripe.Invoice;
       const subId = idOf(inv.parent?.subscription_details?.subscription ?? null);
+      const sub = subId ? await s.subscriptions.retrieve(subId) : null;
       const city = await cityFor(admin, { subscription: subId, customer: idOf(inv.customer) });
       if (!city) return;
       await logCityEvent(admin, city.id, 'invoice_paid', { invoice: inv.id, amount_paid: inv.amount_paid }, `paid:${inv.id}`);
-      if (city.status === 'suspended') await setStatus(admin, city, 'active', event.id);
+      // Reactivate only if the subscription is in good standing now (another
+      // invoice may still be overdue, or it may have been canceled).
+      if (city.status === 'suspended' && (!sub || statusFor(sub) === 'active')) await setStatus(admin, city, 'active', event.id);
       return;
     }
     case 'invoice.finalized': {

@@ -1,3 +1,4 @@
+import 'server-only';
 import Stripe from 'stripe';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { TIERS, CITY_TERMS_VERSION, formatDate, type CityAccount } from '@/lib/city';

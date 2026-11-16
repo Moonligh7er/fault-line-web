@@ -52,8 +52,11 @@ describe('buildCsp', () => {
     expect(buildCsp({ nonce, isDev: false })).toContain('upgrade-insecure-requests');
   });
 
-  it('allows Supabase websocket', () => {
-    expect(buildCsp({ nonce, isDev: false })).toContain('wss://*.supabase.co');
+  it('allows our Supabase project only (https and websocket)', () => {
+    const csp = buildCsp({ nonce, isDev: false });
+    expect(csp).toContain('https://dzewklljiksyivsfpunt.supabase.co');
+    expect(csp).toContain('wss://dzewklljiksyivsfpunt.supabase.co');
+    expect(csp).not.toContain('*.supabase.co');
   });
 
   it('allows Formspree for feedback submissions', () => {

@@ -2,7 +2,7 @@ import type { NextRequest } from 'next/server';
 import {
   OPEN311_DEFAULT_WINDOW_DAYS,
   OPEN311_MAX_RESULTS,
-  REPORT_COLUMNS,
+  OPEN311_REPORT_COLUMNS,
   agencyNames,
   isUuid,
   open311Error,
@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
   const supabase = publicClient();
   let q = supabase
     .from('reports')
-    .select(REPORT_COLUMNS)
+    .select(OPEN311_REPORT_COLUMNS)
     .neq('status', 'draft')
     .order('created_at', { ascending: false })
     .limit(OPEN311_MAX_RESULTS);

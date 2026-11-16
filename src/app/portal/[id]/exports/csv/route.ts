@@ -20,6 +20,9 @@ function esc(value: unknown): string {
 /** Every report in the city's jurisdiction (no reporter identity), paged past the 5,000-row RPC cap. */
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) {
+    return new NextResponse('Not found', { status: 404 });
+  }
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
@@ -30,7 +33,11 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   let after: string | null = null;
   for (let page = 0; page < 40; page++) {
     const { data, error } = await supabase.rpc('city_export_rows', { p_city: id, p_after: after, p_limit: 5000 });
-    if (error) return new NextResponse(error.message, { status: error.code === '42501' || error.code === 'P0402' ? 403 : 500 });
+    if (error) {
+      const forbidden = error.code === '42501' || error.code === 'P0402';
+      if (!forbidden) console.error('[portal] city_export_rows', error);
+      return new NextResponse(forbidden ? 'Forbidden' : 'Export failed', { status: forbidden ? 403 : 500 });
+    }
     const rows = (data ?? []) as Record<string, unknown>[];
     for (const r of rows) lines.push(HEADER.map((k) => esc(r[k])).join(','));
     if (rows.length < 5000) break;

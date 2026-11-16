@@ -5,8 +5,13 @@ import { z } from 'zod';
 import { createSupabaseServerClient, createSupabaseServiceClient } from '@/lib/supabase/server';
 import { isAdmin } from '@/lib/admin';
 import { logCityEvent } from '@/lib/stripe';
+import { userError } from '@/lib/errors';
 
 type Result = { ok: true } | { ok: false; error: string };
+
+const CityId = z.string().uuid();
+const Role = z.enum(['owner', 'staff']);
+const BAD_ID: Result = { ok: false, error: 'invalid city account id' };
 
 async function adminActor(): Promise<string | null> {
   const supabase = await createSupabaseServerClient();
@@ -65,7 +70,7 @@ export async function createCityAccount(input: z.input<typeof CreateSchema>): Pr
     })
     .select('id')
     .single();
-  if (error) return { ok: false, error: error.message };
+  if (error) return { ok: false, error: userError('admin.createCityAccount', error, 'Could not create the city account.') };
   await admin.from('city_invites').insert({ city_account_id: data.id, email: v.ownerEmail, role: 'owner', invited_by: actor });
   await logCityEvent(admin, data.id, 'created', { tier: v.tier, pilot_ends_at: v.pilotEndsAt, fee_waived: v.feeWaived }, undefined, actor);
   if (v.feeWaived) await logCityEvent(admin, data.id, 'fee_waived', { note: v.waiverNote ?? null }, undefined, actor);
@@ -76,12 +81,15 @@ export async function createCityAccount(input: z.input<typeof CreateSchema>): Pr
 export async function inviteCityMember(cityId: string, email: string, role: 'owner' | 'staff'): Promise<Result> {
   const actor = await adminActor();
   if (!actor) return { ok: false, error: 'not authorized' };
+  if (!CityId.safeParse(cityId).success) return BAD_ID;
+  const r = Role.safeParse(role);
+  if (!r.success) return { ok: false, error: 'role must be owner or staff' };
   const e = z.string().trim().toLowerCase().email().safeParse(email);
   if (!e.success) return { ok: false, error: 'invalid email' };
   const { error } = await createSupabaseServiceClient()
     .from('city_invites')
-    .upsert({ city_account_id: cityId, email: e.data, role, invited_by: actor, accepted_at: null }, { onConflict: 'city_account_id,email' });
-  if (error) return { ok: false, error: error.message };
+    .upsert({ city_account_id: cityId, email: e.data, role: r.data, invited_by: actor, accepted_at: null }, { onConflict: 'city_account_id,email' });
+  if (error) return { ok: false, error: userError('admin.inviteCityMember', error, 'Could not save the invite.') };
   revalidatePath('/admin/cities');
   return { ok: true };
 }
@@ -90,12 +98,15 @@ export async function inviteCityMember(cityId: string, email: string, role: 'own
 export async function setFeeWaiver(cityId: string, waived: boolean, note: string): Promise<Result> {
   const actor = await adminActor();
   if (!actor) return { ok: false, error: 'not authorized' };
+  if (!CityId.safeParse(cityId).success) return BAD_ID;
+  if (typeof waived !== 'boolean') return { ok: false, error: 'invalid request' };
   const admin = createSupabaseServiceClient();
-  const patch: Record<string, unknown> = { fee_waived: waived, fee_waiver_note: waived ? note || null : null };
+  const waiverNote = typeof note === 'string' ? note.slice(0, 500) : '';
+  const patch: Record<string, unknown> = { fee_waived: waived, fee_waiver_note: waived ? waiverNote || null : null };
   if (!waived) patch.auto_renew = false;
   const { error } = await admin.from('city_accounts').update(patch).eq('id', cityId);
-  if (error) return { ok: false, error: error.message };
-  await logCityEvent(admin, cityId, waived ? 'fee_waived' : 'fee_waiver_removed', { note: note || null }, undefined, actor);
+  if (error) return { ok: false, error: userError('admin.setFeeWaiver', error, 'Could not update the waiver.') };
+  await logCityEvent(admin, cityId, waived ? 'fee_waived' : 'fee_waiver_removed', { note: waiverNote || null }, undefined, actor);
   revalidatePath('/admin/cities');
   return { ok: true };
 }
@@ -103,13 +114,14 @@ export async function setFeeWaiver(cityId: string, waived: boolean, note: string
 export async function extendPilot(cityId: string, date: string): Promise<Result> {
   const actor = await adminActor();
   if (!actor) return { ok: false, error: 'not authorized' };
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return { ok: false, error: 'date must be YYYY-MM-DD' };
+  if (!CityId.safeParse(cityId).success) return BAD_ID;
+  if (typeof date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return { ok: false, error: 'date must be YYYY-MM-DD' };
   const admin = createSupabaseServiceClient();
   const { data: c } = await admin.from('city_accounts').select('status').eq('id', cityId).single();
   const patch: Record<string, unknown> = { pilot_ends_at: `${date}T23:59:59Z` };
   if (c?.status === 'ended') patch.status = 'pilot';
   const { error } = await admin.from('city_accounts').update(patch).eq('id', cityId);
-  if (error) return { ok: false, error: error.message };
+  if (error) return { ok: false, error: userError('admin.extendPilot', error, 'Could not extend the pilot.') };
   await logCityEvent(admin, cityId, 'pilot_extended', { pilot_ends_at: date }, undefined, actor);
   revalidatePath('/admin/cities');
   return { ok: true };

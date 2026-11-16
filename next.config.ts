@@ -1,6 +1,15 @@
 import type { NextConfig } from 'next';
 import { withSentryConfig } from '@sentry/nextjs';
 
+// Supabase project host: images and CSP are pinned to it, not *.supabase.co.
+const SUPABASE_HOST = 'dzewklljiksyivsfpunt.supabase.co';
+
+// Never fall back to localhost in production: an unset origin there leaves
+// only same-host server actions allowed.
+const appOrigin =
+  process.env.NEXT_PUBLIC_APP_ORIGIN ??
+  (process.env.NODE_ENV === 'production' ? undefined : 'http://localhost:3000');
+
 const config: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
@@ -9,9 +18,8 @@ const config: NextConfig = {
   experimental: {
     serverActions: {
       bodySizeLimit: '6mb',
-      allowedOrigins: [
-        process.env.NEXT_PUBLIC_APP_ORIGIN ?? 'http://localhost:3000',
-      ],
+      // Hosts, not URLs: Next compares these with the Origin header's host.
+      allowedOrigins: appOrigin ? [new URL(appOrigin).host] : [],
     },
   },
 
@@ -19,7 +27,7 @@ const config: NextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: '*.supabase.co',
+        hostname: SUPABASE_HOST,
         pathname: '/storage/v1/object/public/**',
       },
     ],

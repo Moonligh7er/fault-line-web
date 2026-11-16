@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { getCategoryInfo } from '@/lib/categories';
-import type { ReportRow, ProfileRow } from '@/lib/types';
+import { PROFILE_COLUMNS, type ReportRow, type ProfileRow } from '@/lib/types';
 
 export const metadata = { title: 'Profile' };
 
@@ -15,9 +15,10 @@ export default async function ProfilePage() {
   if (!user) redirect('/login?next=/profile');
 
   const [{ data: profile }, { data: reportData }] = await Promise.all([
+    // Only these profile columns are readable (push_token is not), so no '*'.
     supabase
       .from('profiles')
-      .select('*')
+      .select(PROFILE_COLUMNS)
       .eq('id', user.id)
       .maybeSingle<ProfileRow>(),
     // my_reports() includes the user's anonymous reports, whose owner is kept

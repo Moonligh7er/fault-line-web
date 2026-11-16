@@ -20,7 +20,10 @@ export default async function ScorecardPage({ params }: { params: Promise<{ id: 
     supabase.rpc('city_scorecard', { p_city: id, p_days: 365 }),
     supabase.rpc('city_resolved_clusters', { p_city: id }),
   ]);
-  if (error) return <p role="alert">Could not load the scorecard: {error.message}</p>;
+  if (error) {
+    console.error('[portal] city_scorecard', error);
+    return <p role="alert">Could not load the scorecard. Please try again later.</p>;
+  }
   const rows = (score ?? []) as Row[];
   const clusters = (fixed ?? []) as Fixed[];
 
