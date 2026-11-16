@@ -4,6 +4,7 @@ import { isAdmin } from '@/lib/admin';
 import QueueList, { type QueueRow } from './queue-list';
 import { AutoSendToggle, OutboundReviewList, SandboxToggle, type OutboundRow } from './outbound-review';
 import { InboundReviewList, ReplySettings, type InboundRow } from './inbound-review';
+import { ManualFormList, type ManualFormRow } from './manual-forms';
 
 export const metadata = {
   title: 'Outbound Queue',
@@ -74,6 +75,29 @@ export default async function EscalationQueuePage() {
     };
   });
 
+  // Single-report submissions waiting on a hand-submitted web form
+  // (clusters show up below through escalation_log).
+  const { data: manualRaw } = await supabase
+    .from('outbound_messages')
+    .select('id, ref, methods, subject, body, created_at, cluster_id, authorities ( name )')
+    .eq('status', 'manual_pending')
+    .is('cluster_id', null)
+    .order('created_at', { ascending: true })
+    .limit(100);
+  const manualForms: ManualFormRow[] = (manualRaw ?? []).map((r) => {
+    const authority = Array.isArray(r.authorities) ? r.authorities[0] : r.authorities;
+    const form = ((r.methods ?? []) as { method?: string; endpoint?: string }[]).find((m) => m.method === 'web_form');
+    return {
+      id: r.id,
+      ref: r.ref,
+      authorityName: authority?.name ?? '(unknown authority)',
+      formUrl: form?.endpoint ?? null,
+      subject: r.subject,
+      body: r.body,
+      createdAt: r.created_at,
+    };
+  });
+
   // Pull escalation_log rows that need manual handling, newest first.
   // Joins in the cluster + authority so we can render a complete card per row.
   const { data: rawRows } = await supabase
@@ -132,6 +156,12 @@ export default async function EscalationQueuePage() {
         Awaiting review <span className="mono" style={{ fontSize: 14, color: 'var(--steel-light)' }}>({pending.length})</span>
       </h2>
       <OutboundReviewList rows={pending} />
+
+      <h2 style={{ fontSize: 26, fontWeight: 900, margin: '32px 0 12px' }}>
+        Web forms to submit by hand{' '}
+        <span className="mono" style={{ fontSize: 14, color: 'var(--steel-light)' }}>({manualForms.length})</span>
+      </h2>
+      <ManualFormList rows={manualForms} />
 
       <h2 style={{ fontSize: 26, fontWeight: 900, margin: '32px 0 12px' }}>
         Replies from authorities{' '}

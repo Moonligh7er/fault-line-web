@@ -51,6 +51,16 @@ export async function markSubmitted(logId: string, newStatus: 'sent' | 'failed')
   return { ok: true };
 }
 
+/** A single-report web form submitted (or abandoned) by hand. */
+export async function markOutboundManual(id: string, status: 'sent' | 'failed'): Promise<Result> {
+  if (!/^[0-9a-f-]{36}$/i.test(id) || (status !== 'sent' && status !== 'failed')) return { ok: false, error: 'Invalid request.' };
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase.rpc('mark_outbound_manual', { p_id: id, p_status: status });
+  if (error) return { ok: false, error: userError('admin.queue', error, 'Could not save. Please try again.') };
+  revalidatePath('/admin/queue');
+  return { ok: true };
+}
+
 export async function reviewInbound(
   id: string,
   apply: boolean,
